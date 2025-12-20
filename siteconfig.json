@@ -1,7 +1,13 @@
 {
   "fonts": {
-    "ar": { "headings": "Cairo", "body": "Cairo" },
-    "en": { "headings": "Poppins", "body": "Poppins" }
+    "ar": {
+      "headings": "Cairo",
+      "body": "Cairo"
+    },
+    "en": {
+      "headings": "Poppins",
+      "body": "Poppins"
+    }
   },
   "home": {
     "hero_title_ar": "تقييمات علمية لمستقبل الطب",
