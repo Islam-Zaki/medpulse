@@ -12,6 +12,28 @@ const ARABIC_FONTS = ['Cairo', 'Tajawal', 'Almarai', 'Noto Kufi Arabic'];
 const ENGLISH_FONTS = ['Poppins', 'Montserrat', 'Roboto', 'Open Sans'];
 const DOMAIN = 'https://medpulse-production.up.railway.app';
 
+// FIX: Components moved outside to maintain focus during state updates
+const EditableH1 = ({ val, onChange, className = "" }: { val: string; onChange: (v: string) => void; className?: string }) => (
+    <input 
+        className={`bg-transparent border-b border-dashed border-gray-400 hover:border-blue-400 focus:border-blue-600 focus:outline-none w-full text-gray-900 font-inherit ${className}`}
+        value={val}
+        onChange={e => onChange(e.target.value)}
+    />
+);
+
+const EditableP = ({ val, onChange, className = "" }: { val: string; onChange: (v: string) => void; className?: string }) => (
+    <textarea 
+        rows={1}
+        className={`bg-transparent border-b border-dashed border-gray-400 hover:border-blue-400 focus:border-blue-600 focus:outline-none w-full resize-none overflow-hidden text-gray-900 font-inherit ${className}`}
+        value={val}
+        onChange={e => onChange(e.target.value)}
+        onInput={(e: any) => {
+            e.target.style.height = 'auto';
+            e.target.style.height = e.target.scrollHeight + 'px';
+        }}
+    />
+);
+
 const VisualEditor: React.FC<{ 
     page: StaticPage; 
     data: SiteConfig; 
@@ -21,7 +43,6 @@ const VisualEditor: React.FC<{
 }> = ({ page, data, setData, onClose, onSave }) => {
     const { t, language, setLanguage } = useLocalization();
     
-    // For Home Hero Preview
     const [heroMode, setHeroMode] = useState<'images' | 'video'>('images');
     const [carouselImages, setCarouselImages] = useState<string[]>(['https://picsum.photos/seed/bg/1200/800']);
     const [videoUrl, setVideoUrl] = useState('');
@@ -57,34 +78,12 @@ const VisualEditor: React.FC<{
         setData(newData);
     };
 
-    const EditableH1 = ({ section, field, val, className = "" }: any) => (
-        <input 
-            className={`bg-transparent border-b border-dashed border-gray-400 hover:border-blue-400 focus:border-blue-600 focus:outline-none w-full text-gray-900 font-inherit ${className}`}
-            value={val}
-            onChange={e => updateField(section, field, e.target.value)}
-        />
-    );
-
-    const EditableP = ({ section, field, val, className = "" }: any) => (
-        <textarea 
-            rows={1}
-            className={`bg-transparent border-b border-dashed border-gray-400 hover:border-blue-400 focus:border-blue-600 focus:outline-none w-full resize-none overflow-hidden text-gray-900 font-inherit ${className}`}
-            value={val}
-            onChange={e => updateField(section, field, e.target.value)}
-            onInput={(e: any) => {
-                e.target.style.height = 'auto';
-                e.target.style.height = e.target.scrollHeight + 'px';
-            }}
-        />
-    );
-
     const renderEditorContent = () => {
         const lang = language;
         switch(page) {
             case 'home':
                 return (
                     <div className="font-arabic space-y-0">
-                        {/* HERO REPLICA */}
                         <section className="relative h-[500px] text-white flex items-center overflow-hidden bg-clinical-charcoal">
                             <div className="absolute inset-0 z-0">
                                 {heroMode === 'video' && videoUrl ? (
@@ -97,37 +96,35 @@ const VisualEditor: React.FC<{
                             </div>
                             <div className="absolute inset-0 bg-clinical-charcoal/40 z-10"></div>
                             <div className="container mx-auto px-12 z-20 text-start relative">
-                                <EditableH1 section="home" className="text-5xl font-bold leading-tight !text-white" field={`hero_title_${lang}`} val={(data.home as any)[`hero_title_${lang}`]} />
-                                <EditableH1 section="home" className="mt-2 text-2xl font-light !text-white" field={`hero_subtitle_${lang}`} val={(data.home as any)[`hero_subtitle_${lang}`]} />
-                                <EditableP section="home" className="mt-4 text-xl opacity-90 max-w-3xl !text-white" field={`hero_desc_${lang}`} val={(data.home as any)[`hero_desc_${lang}`]} />
+                                <EditableH1 className="text-5xl font-bold leading-tight !text-white" onChange={v => updateField('home', `hero_title_${lang}`, v)} val={(data.home as any)[`hero_title_${lang}`]} />
+                                <EditableH1 className="mt-2 text-2xl font-light !text-white" onChange={v => updateField('home', `hero_subtitle_${lang}`, v)} val={(data.home as any)[`hero_subtitle_${lang}`]} />
+                                <EditableP className="mt-4 text-xl opacity-90 max-w-3xl !text-white" onChange={v => updateField('home', `hero_desc_${lang}`, v)} val={(data.home as any)[`hero_desc_${lang}`]} />
                             </div>
                         </section>
 
-                        {/* WHAT IS MEDPULSE REPLICA */}
                         <section className="py-20 bg-white">
                             <div className="container mx-auto px-12 max-w-4xl text-center">
-                                <EditableH1 section="home" className="text-3xl font-bold text-gray-900 mb-8 !text-center" field={`about_title_${lang}`} val={(data.home as any)[`about_title_${lang}`]} />
-                                <EditableP section="home" className="text-gray-800 leading-relaxed text-lg mb-12 text-center" field={`about_desc_${lang}`} val={(data.home as any)[`about_desc_${lang}`]} />
+                                <EditableH1 className="text-3xl font-bold text-gray-900 mb-8 !text-center" onChange={v => updateField('home', `about_title_${lang}`, v)} val={(data.home as any)[`about_title_${lang}`]} />
+                                <EditableP className="text-gray-800 leading-relaxed text-lg mb-12 text-center" onChange={v => updateField('home', `about_desc_${lang}`, v)} val={(data.home as any)[`about_desc_${lang}`]} />
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 text-start rtl:text-right">
                                     {[1, 2, 3, 4].map(num => (
                                         <div key={num} className="flex items-center gap-3">
                                             <span className="text-med-vital-green text-2xl">✔</span>
-                                            <EditableP section="home" className="text-gray-900 font-bold" field={`about_p${num}_${lang}`} val={(data.home as any)[`about_p${num}_${lang}`]} />
+                                            <EditableP className="text-gray-900 font-bold" onChange={v => updateField('home', `about_p${num}_${lang}`, v)} val={(data.home as any)[`about_p${num}_${lang}`]} />
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </section>
 
-                        {/* FOUNDER SECTION REPLICA */}
                         <section className="py-20 bg-sterile-light-grey">
                             <div className="container mx-auto px-12">
-                                <EditableH1 section="home" className="text-3xl font-bold text-gray-900 mb-16 !text-center" field={`founder_sec_title_${lang}`} val={(data.home as any)[`founder_sec_title_${lang}`]} />
+                                <EditableH1 className="text-3xl font-bold text-gray-900 mb-16 !text-center" onChange={v => updateField('home', `founder_sec_title_${lang}`, v)} val={(data.home as any)[`founder_sec_title_${lang}`]} />
                                 <div className="grid md:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
                                     <div className="order-2 md:order-1 text-center md:text-start rtl:md:text-right">
                                         <h3 className="text-2xl font-bold text-gray-900 mb-2">{(data.founder as any)[`name_${lang}`]}</h3>
                                         <p className="text-med-tech-blue font-bold mb-6">{(data.founder as any)[`main_title_${lang}`]}</p>
-                                        <EditableP section="home" className="text-gray-800 leading-relaxed mb-6" field={`founder_sec_desc_${lang}`} val={(data.home as any)[`founder_sec_desc_${lang}`]} />
+                                        <EditableP className="text-gray-800 leading-relaxed mb-6" onChange={v => updateField('home', `founder_sec_desc_${lang}`, v)} val={(data.home as any)[`founder_sec_desc_${lang}`]} />
                                         <button className="bg-med-tech-blue text-white font-bold py-2.5 px-8 rounded-lg shadow-md cursor-default opacity-80">{t({ar: 'مشاهدة الملف الكامل', en: 'View Full Profile'})}</button>
                                     </div>
                                     <div className="order-1 md:order-2 flex justify-center">
@@ -142,37 +139,38 @@ const VisualEditor: React.FC<{
                 return (
                     <div className="font-arabic">
                         <header className="bg-sterile-light-grey py-20 px-10 text-center rounded-t-[40px]">
-                             <EditableH1 section="about" className="text-5xl font-bold text-gray-900 !text-center" field={`h1_${lang}`} val={(data.about as any)[`h1_${lang}`]} />
-                             <EditableP section="about" className="text-2xl mt-6 text-gray-800 max-w-4xl mx-auto text-center" field={`subtitle_${lang}`} val={(data.about as any)[`subtitle_${lang}`]} />
+                             <EditableH1 className="text-5xl font-bold text-gray-900 !text-center" onChange={v => updateField('about', `h1_${lang}`, v)} val={(data.about as any)[`h1_${lang}`]} />
+                             <EditableP className="text-2xl mt-6 text-gray-800 max-w-4xl mx-auto text-center" onChange={v => updateField('about', `subtitle_${lang}`, v)} val={(data.about as any)[`subtitle_${lang}`]} />
                         </header>
                         <div className="container mx-auto px-12 py-16 space-y-24">
                             <section>
                                 <div className="text-center mb-12">
                                     <span className="text-5xl">🩺</span>
-                                    <EditableH1 section="about" className="mt-4 text-3xl font-bold text-gray-900 !text-center" field={`intro_title_${lang}`} val={(data.about as any)[`intro_title_${lang}`]} />
+                                    <EditableH1 className="mt-4 text-3xl font-bold text-gray-900 !text-center" onChange={v => updateField('about', `intro_title_${lang}`, v)} val={(data.about as any)[`intro_title_${lang}`]} />
                                 </div>
                                 <div className="max-w-4xl mx-auto space-y-8 text-lg text-gray-900 text-center leading-relaxed">
-                                    <EditableP section="about" field={`intro_p1_${lang}`} val={(data.about as any)[`intro_p1_${lang}`]} className="text-center" />
-                                    <EditableP section="about" field={`intro_p2_${lang}`} val={(data.about as any)[`intro_p2_${lang}`]} className="text-center" />
+                                    {/* FIX: Removed invalid 'field' prop from EditableP components */}
+                                    <EditableP onChange={v => updateField('about', `intro_p1_${lang}`, v)} val={(data.about as any)[`intro_p1_${lang}`]} className="text-center" />
+                                    <EditableP onChange={v => updateField('about', `intro_p2_${lang}`, v)} val={(data.about as any)[`intro_p2_${lang}`]} className="text-center" />
                                 </div>
                             </section>
 
                             <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                                 <div className="bg-white p-10 rounded-xl shadow-lg border-l-8 border-med-tech-blue">
-                                    <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">🎯 <EditableH1 section="about" className="text-2xl !text-gray-900" field={`mission_title_${lang}`} val={(data.about as any)[`mission_title_${lang}`]} /></h3>
-                                    <EditableP section="about" className="text-med-tech-blue bg-blue-50 p-6 rounded-xl font-bold" field={`mission_summary_${lang}`} val={(data.about as any)[`mission_summary_${lang}`]} />
+                                    <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">🎯 <EditableH1 className="text-2xl !text-gray-900" onChange={v => updateField('about', `mission_title_${lang}`, v)} val={(data.about as any)[`mission_title_${lang}`]} /></h3>
+                                    <EditableP className="text-med-tech-blue bg-blue-50 p-6 rounded-xl font-bold" onChange={v => updateField('about', `mission_summary_${lang}`, v)} val={(data.about as any)[`mission_summary_${lang}`]} />
                                 </div>
                                 <div className="bg-white p-10 rounded-xl shadow-lg border-l-8 border-med-tech-blue">
-                                    <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">👁️ <EditableH1 section="about" className="text-2xl !text-gray-900" field={`vision_title_${lang}`} val={(data.about as any)[`vision_title_${lang}`]} /></h3>
-                                    <EditableP section="about" className="text-gray-800 leading-relaxed" field={`vision_text_${lang}`} val={(data.about as any)[`vision_text_${lang}`]} />
+                                    <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">👁️ <EditableH1 className="text-2xl !text-gray-900" onChange={v => updateField('about', `vision_title_${lang}`, v)} val={(data.about as any)[`vision_title_${lang}`]} /></h3>
+                                    <EditableP className="text-gray-800 leading-relaxed" onChange={v => updateField('about', `vision_text_${lang}`, v)} val={(data.about as any)[`vision_text_${lang}`]} />
                                 </div>
                             </div>
 
                             <section className="bg-med-tech-blue text-white rounded-3xl text-center p-16 max-w-5xl mx-auto shadow-2xl">
-                                <EditableH1 section="about" className="text-4xl font-bold mb-6 !text-center !text-white" field={`cta_title_${lang}`} val={(data.about as any)[`cta_title_${lang}`]} />
-                                <EditableP section="about" className="text-xl max-w-2xl mx-auto text-gray-200 text-center mb-10 !text-white" field={`cta_desc_${lang}`} val={(data.about as any)[`cta_desc_${lang}`]} />
+                                <EditableH1 className="text-4xl font-bold mb-6 !text-center !text-white" onChange={v => updateField('about', `cta_title_${lang}`, v)} val={(data.about as any)[`cta_title_${lang}`]} />
+                                <EditableP className="text-xl max-w-2xl mx-auto text-gray-200 text-center mb-10 !text-white" onChange={v => updateField('about', `cta_desc_${lang}`, v)} val={(data.about as any)[`cta_desc_${lang}`]} />
                                 <div className="inline-block">
-                                    <EditableH1 section="about" className="bg-med-vital-green text-white font-black py-4 px-12 rounded-xl text-xl !text-center shadow-lg hover:bg-green-700 transition-all !text-white" field={`cta_btn_${lang}`} val={(data.about as any)[`cta_btn_${lang}`]} />
+                                    <EditableH1 className="bg-med-vital-green text-white font-black py-4 px-12 rounded-xl text-xl !text-center shadow-lg hover:bg-green-700 transition-all !text-white" onChange={v => updateField('about', `cta_btn_${lang}`, v)} val={(data.about as any)[`cta_btn_${lang}`]} />
                                 </div>
                             </section>
                         </div>
@@ -185,17 +183,17 @@ const VisualEditor: React.FC<{
                              <div className="w-48 h-48 rounded-full bg-white mx-auto mb-8 shadow-2xl ring-8 ring-white/50 overflow-hidden">
                                  <img src={FOUNDER_DATA_DETAILED.image} className="w-full h-full object-cover" alt="Founder" />
                              </div>
-                             <EditableH1 section="founder" className="text-5xl font-black text-med-blue !text-center mb-4" field={`name_${lang}`} val={(data.founder as any)[`name_${lang}`]} />
-                             <EditableH1 section="founder" className="text-2xl text-med-sky font-bold !text-center opacity-80" field={`main_title_${lang}`} val={(data.founder as any)[`main_title_${lang}`]} />
+                             <EditableH1 className="text-5xl font-black text-med-blue !text-center mb-4" onChange={v => updateField('founder', `name_${lang}`, v)} val={(data.founder as any)[`name_${lang}`]} />
+                             <EditableH1 className="text-2xl text-med-sky font-bold !text-center opacity-80" onChange={v => updateField('founder', `main_title_${lang}`, v)} val={(data.founder as any)[`main_title_${lang}`]} />
                          </div>
                          <div className="container mx-auto px-12 -mt-20">
                             <div className="grid lg:grid-cols-3 gap-12">
                                 <div className="lg:col-span-2">
                                     <div className="bg-white p-12 md:p-20 rounded-[40px] shadow-2xl relative z-10 border border-gray-100 mb-12">
-                                        <h4 className="text-3xl font-black text-gray-900 mb-8 border-b-4 border-med-light-blue pb-4 w-fit"><EditableH1 section="founder" className="!text-gray-900" field={`intro_title_${lang}`} val={(data.founder as any)[`intro_title_${lang}`]} /></h4>
-                                        <EditableP section="founder" className="text-2xl leading-relaxed text-gray-900 font-medium mb-12" field={`intro_${lang}`} val={(data.founder as any)[`intro_${lang}`]} />
+                                        <h4 className="text-3xl font-black text-gray-900 mb-8 border-b-4 border-med-light-blue pb-4 w-fit"><EditableH1 className="!text-gray-900" onChange={v => updateField('founder', `intro_title_${lang}`, v)} val={(data.founder as any)[`intro_title_${lang}`]} /></h4>
+                                        <EditableP className="text-2xl leading-relaxed text-gray-900 font-medium mb-12" onChange={v => updateField('founder', `intro_${lang}`, v)} val={(data.founder as any)[`intro_${lang}`]} />
                                         <blockquote className="bg-blue-50 border-r-8 border-med-sky p-10 rounded-2xl italic rtl:border-r-0 rtl:border-l-8">
-                                            <EditableP section="founder" className="text-2xl text-gray-900 leading-relaxed mb-4" field={`quote_${lang}`} val={(data.founder as any)[`quote_${lang}`]} />
+                                            <EditableP className="text-2xl text-gray-900 leading-relaxed mb-4" onChange={v => updateField('founder', `quote_${lang}`, v)} val={(data.founder as any)[`quote_${lang}`]} />
                                             <cite className="block text-right font-black text-med-blue not-italic text-xl">
                                                 {language === 'ar' ? `— ${data.founder.name_ar}` : `— ${data.founder.name_en}`}
                                             </cite>
@@ -206,10 +204,10 @@ const VisualEditor: React.FC<{
                                         <section>
                                             <h2 className="text-3xl font-black text-med-blue mb-10 border-b-2 border-gray-100 pb-4 flex items-center gap-4">
                                                 <span className="bg-med-blue text-white w-10 h-10 rounded-lg flex items-center justify-center text-sm">🏥</span>
-                                                <EditableH1 section="founder" className="flex-1 !text-med-blue" field={`exp_title_${lang}`} val={(data.founder as any)[`exp_title_${lang}`]} />
+                                                <EditableH1 className="flex-1 !text-med-blue" onChange={v => updateField('founder', `exp_title_${lang}`, v)} val={(data.founder as any)[`exp_title_${lang}`]} />
                                             </h2>
                                             <div className="bg-gray-50 p-8 rounded-3xl border border-gray-200">
-                                                <EditableH1 section="founder" className="text-2xl font-black text-gray-900 mb-6" field={`exp_current_title_${lang}`} val={(data.founder as any)[`exp_current_title_${lang}`]} />
+                                                <EditableH1 className="text-2xl font-black text-gray-900 mb-6" onChange={v => updateField('founder', `exp_current_title_${lang}`, v)} val={(data.founder as any)[`exp_current_title_${lang}`]} />
                                                 <ul className="space-y-4 opacity-50 pointer-events-none">
                                                     <li className="flex gap-3 text-gray-800">🔹 <span>Senior Consultant Neonatologist at Latifa Hospital</span></li>
                                                     <li className="flex gap-3 text-gray-800">🔹 <span>Head of the Continuing Medical Education Committee</span></li>
@@ -219,20 +217,20 @@ const VisualEditor: React.FC<{
                                         <section>
                                             <h2 className="text-3xl font-black text-med-blue mb-10 border-b-2 border-gray-100 pb-4 flex items-center gap-4">
                                                 <span className="bg-med-vital-green text-white w-10 h-10 rounded-lg flex items-center justify-center text-sm">🎓</span>
-                                                <EditableH1 section="founder" className="flex-1 !text-med-blue" field={`academic_title_${lang}`} val={(data.founder as any)[`academic_title_${lang}`]} />
+                                                <EditableH1 className="flex-1 !text-med-blue" onChange={v => updateField('founder', `academic_title_${lang}`, v)} val={(data.founder as any)[`academic_title_${lang}`]} />
                                             </h2>
-                                            <EditableP section="founder" className="text-xl text-gray-900 leading-relaxed mb-8 bg-sterile-light-grey/30 p-8 rounded-3xl" field={`academic_summary_${lang}`} val={(data.founder as any)[`academic_summary_${lang}`]} />
+                                            <EditableP className="text-xl text-gray-900 leading-relaxed mb-8 bg-sterile-light-grey/30 p-8 rounded-3xl" onChange={v => updateField('founder', `academic_summary_${lang}`, v)} val={(data.founder as any)[`academic_summary_${lang}`]} />
                                         </section>
                                     </div>
                                 </div>
                                 <div className="lg:col-span-1">
                                     <div className="bg-gray-50 p-10 rounded-[40px] shadow-sm border border-gray-200 sticky top-24">
-                                        <h3 className="text-2xl font-black text-med-blue mb-8 border-b pb-4"><EditableH1 section="founder" className="!text-med-blue" field={`profile_title_${lang}`} val={(data.founder as any)[`profile_title_${lang}`]} /></h3>
+                                        <h3 className="text-2xl font-black text-med-blue mb-8 border-b pb-4"><EditableH1 className="!text-med-blue" onChange={v => updateField('founder', `profile_title_${lang}`, v)} val={(data.founder as any)[`profile_title_${lang}`]} /></h3>
                                         <div className="space-y-8">
                                             {[1, 2, 3, 4].map(num => (
                                                 <div key={num}>
                                                     <strong className="text-gray-500 block text-xs uppercase tracking-widest mb-2">{(data.founder as any)[`profile_item${num}_label_${lang}`]}</strong>
-                                                    <EditableP section="founder" className="text-gray-900 font-bold text-lg" field={`profile_item${num}_val_${lang}`} val={(data.founder as any)[`profile_item${num}_val_${lang}`]} />
+                                                    <EditableP className="text-gray-900 font-bold text-lg" onChange={v => updateField('founder', `profile_item${num}_val_${lang}`, v)} val={(data.founder as any)[`profile_item${num}_val_${lang}`]} />
                                                 </div>
                                             ))}
                                         </div>
@@ -246,27 +244,27 @@ const VisualEditor: React.FC<{
                 return (
                     <div className="font-arabic">
                         <header className="bg-sterile-light-grey py-24 px-10 text-center rounded-t-[40px]">
-                             <EditableH1 section="contact" className="text-5xl font-black text-gray-900 !text-center leading-tight mb-6" field={`h1_${lang}`} val={(data.contact as any)[`h1_${lang}`]} />
-                             <EditableP section="contact" className="text-xl text-gray-800 max-w-3xl mx-auto text-center leading-relaxed" field={`intro_${lang}`} val={(data.contact as any)[`intro_${lang}`]} />
+                             <EditableH1 className="text-5xl font-black text-gray-900 !text-center leading-tight mb-6" onChange={v => updateField('contact', `h1_${lang}`, v)} val={(data.contact as any)[`h1_${lang}`]} />
+                             <EditableP className="text-xl text-gray-800 max-w-3xl mx-auto text-center leading-relaxed" onChange={v => updateField('contact', `intro_${lang}`, v)} val={(data.contact as any)[`intro_${lang}`]} />
                         </header>
                         <div className="container mx-auto px-12 py-24">
                             <section className="mb-24 text-center">
                                 <div className="inline-block p-4 bg-blue-50 rounded-full mb-6">
                                     <span className="text-6xl">💬</span>
                                 </div>
-                                <h2 className="text-4xl font-black text-gray-900 mb-12"><EditableH1 section="contact" className="!text-center !text-gray-900" field={`why_title_${lang}`} val={(data.contact as any)[`why_title_${lang}`]} /></h2>
+                                <h2 className="text-4xl font-black text-gray-900 mb-12"><EditableH1 className="!text-center !text-gray-900" onChange={v => updateField('contact', `why_title_${lang}`, v)} val={(data.contact as any)[`why_title_${lang}`]} /></h2>
                                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                                     {[1, 2, 3, 4].map(num => (
                                         <div key={num} className="bg-white p-8 rounded-3xl shadow-lg border-t-8 border-med-tech-blue text-start rtl:text-right">
-                                            <EditableH1 section="contact" className="text-xl font-bold text-gray-900 mb-6" field={`why_p${num}_title_${lang}`} val={(data.contact as any)[`why_p${num}_title_${lang}`]} />
+                                            <EditableH1 className="text-xl font-bold text-gray-900 mb-6" onChange={v => updateField('contact', `why_p${num}_title_${lang}`, v)} val={(data.contact as any)[`why_p${num}_title_${lang}`]} />
                                             <div className="space-y-4">
                                                 <div className="flex gap-2">
                                                     <span className="text-med-tech-blue mt-1">🔹</span>
-                                                    <EditableP section="contact" className="text-sm text-gray-700" field={`why_p${num}_i1_${lang}`} val={(data.contact as any)[`why_p${num}_i1_${lang}`]} />
+                                                    <EditableP className="text-sm text-gray-700" onChange={v => updateField('contact', `why_p${num}_i1_${lang}`, v)} val={(data.contact as any)[`why_p${num}_i1_${lang}`]} />
                                                 </div>
                                                 <div className="flex gap-2">
                                                     <span className="text-med-tech-blue mt-1">🔹</span>
-                                                    <EditableP section="contact" className="text-sm text-gray-700" field={`why_p${num}_i2_${lang}`} val={(data.contact as any)[`why_p${num}_i2_${lang}`]} />
+                                                    <EditableP className="text-sm text-gray-700" onChange={v => updateField('contact', `why_p${num}_i2_${lang}`, v)} val={(data.contact as any)[`why_p${num}_i2_${lang}`]} />
                                                 </div>
                                             </div>
                                         </div>
@@ -274,8 +272,8 @@ const VisualEditor: React.FC<{
                                 </div>
                             </section>
                             <section className="bg-gray-50 p-12 md:p-20 rounded-[50px] border border-gray-200 shadow-xl">
-                                <h2 className="text-4xl font-black text-gray-900 mb-6"><EditableH1 section="contact" className="!text-gray-900" field={`form_title_${lang}`} val={(data.contact as any)[`form_title_${lang}`]} /></h2>
-                                <EditableP section="contact" className="text-xl text-gray-700 mb-12" field={`form_intro_${lang}`} val={(data.contact as any)[`form_intro_${lang}`]} />
+                                <h2 className="text-4xl font-black text-gray-900 mb-6"><EditableH1 className="!text-gray-900" onChange={v => updateField('contact', `form_title_${lang}`, v)} val={(data.contact as any)[`form_title_${lang}`]} /></h2>
+                                <EditableP className="text-xl text-gray-700 mb-12" onChange={v => updateField('contact', `form_intro_${lang}`, v)} val={(data.contact as any)[`form_intro_${lang}`]} />
                                 <div className="grid md:grid-cols-2 gap-10 opacity-30 pointer-events-none">
                                     <div className="h-16 bg-white border-2 border-gray-300 rounded-2xl"></div>
                                     <div className="h-16 bg-white border-2 border-gray-300 rounded-2xl"></div>
