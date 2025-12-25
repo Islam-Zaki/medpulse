@@ -23,14 +23,19 @@ interface AdminPageProps {
 
 type AdminTab = 'dashboard' | 'settings' | 'contact' | 'articles' | 'categories' | 'authors' | 'experts' | 'events' | 'front_settings' | 'users';
 
-const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
+const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode; badge?: number }> = ({ active, onClick, children, badge }) => (
     <button
         onClick={onClick}
-        className={`w-full text-start px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+        className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-md transition-colors ${
             active ? 'bg-med-tech-blue text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
         }`}
     >
-        {children}
+        <span>{children}</span>
+        {badge !== undefined && badge > 0 && (
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black min-w-[20px] text-center ${active ? 'bg-white text-med-tech-blue' : 'bg-red-500 text-white shadow-sm'}`}>
+                {badge}
+            </span>
+        )}
     </button>
 );
 
@@ -85,6 +90,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ navigate }) => {
     const [events, setEvents] = useState<ApiEvent[]>([]);
 
     const [dashboardTotals, setDashboardTotals] = useState({ events: 0, articles: 0, experts: 0, authors: 0 });
+    const [newContactCount, setNewContactCount] = useState(0);
 
     const [currentArticlesPage, setCurrentArticlesPage] = useState(1);
     const [lastArticlesPage, setLastArticlesPage] = useState(1);
@@ -95,7 +101,19 @@ const AdminPage: React.FC<AdminPageProps> = ({ navigate }) => {
     
     useEffect(() => {
         loadTabData(activeTab);
+        fetchNotifications();
     }, [activeTab]);
+
+    const fetchNotifications = async () => {
+        try {
+            const res = await api.getNotifications();
+            if (res && typeof res.new_contacts === 'number') {
+                setNewContactCount(res.new_contacts);
+            }
+        } catch (e) {
+            console.warn("Could not fetch notifications", e);
+        }
+    };
 
     const loadTabData = async (tab: AdminTab, page: number = 1, silent: boolean = false) => {
         if (!silent) setLoading(true);
@@ -120,6 +138,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ navigate }) => {
                 case 'contact':
                     const contactRes = await api.getContactForms(page); 
                     setContactForms(getArrayFromResponse(contactRes));
+                    fetchNotifications(); // Refresh badge count
                     break;
                 case 'articles':
                     const artRes = await api.getArticles(page);
@@ -187,7 +206,14 @@ const AdminPage: React.FC<AdminPageProps> = ({ navigate }) => {
                 </div>
                 <nav className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-80px)]">
                     {ORDERED_TABS.map(tab => (
-                        <TabButton key={tab} active={activeTab === tab} onClick={() => setActiveTab(tab)}>{t(TAB_LABELS[tab])}</TabButton>
+                        <TabButton 
+                            key={tab} 
+                            active={activeTab === tab} 
+                            onClick={() => setActiveTab(tab)}
+                            badge={tab === 'contact' ? newContactCount : undefined}
+                        >
+                            {t(TAB_LABELS[tab])}
+                        </TabButton>
                     ))}
                 </nav>
             </aside>

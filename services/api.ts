@@ -129,6 +129,9 @@ export const api = {
   getContactForm: (id: number) => jsonFetch(`${BASE_URL}/contact-form/${id}`),
   replyToContactForm: (id: number, message: string) => jsonFetch(`${BASE_URL}/contact-form/reply/${id}`, 'POST', { message }),
 
+  // Notifications
+  getNotifications: () => jsonFetch(`${BASE_URL}/notification`),
+
   // Media 
   createVideo: (data: any) => jsonFetch(`${BASE_URL}/video`, 'POST', data),
   uploadImage: (file: File, type: string, relatedId?: number, relatedIdField?: string) => {
