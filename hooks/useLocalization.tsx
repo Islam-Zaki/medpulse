@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import type { Language, LocalizedString, SiteConfig } from '../types';
 import { api } from '../services/api';
+import { DEFAULT_SITE_CONFIG } from '../constants/configDefault';
 
 interface LocalizationContextType {
   language: Language;
@@ -36,15 +37,8 @@ export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   useEffect(() => {
     const loadConfig = async () => {
-        // 1. Initial State: Load defaults from local JSON
-        let fullConfig: SiteConfig;
-        try {
-            const localRes = await fetch('/siteconfig.json');
-            fullConfig = await localRes.json();
-        } catch (e) {
-            console.error("Failed to load local siteconfig.json", e);
-            return;
-        }
+        // 1. Initial State: Load defaults from the TypeScript constant (replaces physical siteconfig.json fetch)
+        let fullConfig: SiteConfig = JSON.parse(JSON.stringify(DEFAULT_SITE_CONFIG));
 
         // 2. Override with Local Storage (Drafts)
         const savedConfig = localStorage.getItem('medpulse_site_config');
@@ -84,7 +78,10 @@ export const LocalizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             setConfig(fullConfig);
             applyFonts(fullConfig);
         } catch (e) {
-            console.error("Critical: Failed to load any configuration", e);
+            console.error("Critical: Failed to sync configuration with database", e);
+            // Even if DB sync fails, we still have fullConfig from constant + localStorage
+            setConfig(fullConfig);
+            applyFonts(fullConfig);
         }
     };
     loadConfig();

@@ -81,7 +81,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
       const fetchHomeContent = async () => {
           setLoading(true);
           try {
-              // 1. Fetch Limits
+              // 1. Fetch Limits (Wrap in try/catch to handle 401 gracefully)
               let eventsLimit = 3;
               let postsLimit = 3;
               try {
@@ -91,7 +91,9 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
                       eventsLimit = limits.events_number || 3;
                       postsLimit = limits.posts_number || 3;
                   }
-              } catch(e) { console.warn("Limits fetch failed, using fallback 3."); }
+              } catch(e) { 
+                  console.warn("Public settings fetch (limits) failed or unauthorized, using fallback 3.", e); 
+              }
 
               // 2. Fetch Data
               const res = await api.getHomeContent();
@@ -158,9 +160,9 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
                           setCarouselImages(settings.images.map((img: any) => api.resolveImageUrl(`${img.base_url}${img.name}`)));
                       }
                   }
-              } catch (settingsError) { console.warn(settingsError); }
+              } catch (settingsError) { console.warn("Public settings fetch (front-mode) failed or unauthorized.", settingsError); }
 
-          } catch (e) { console.error(e); } 
+          } catch (e) { console.error("Error loading home content:", e); } 
           finally { setLoading(false); }
       };
       fetchHomeContent();
