@@ -13,6 +13,8 @@ interface ConferenceDetailsPageProps {
 }
 
 const DOMAIN = 'https://medpulse-production.up.railway.app';
+const COMMENT_SEP = '|||MP_SEP|||';
+const TOPIC_SEP = '|||MT_SEP|||';
 
 // Helper Components for the new design
 const DetailSection: React.FC<{ title: React.ReactNode; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
@@ -32,10 +34,10 @@ const IconHeading: React.FC<{ icon: string; children: React.ReactNode; }> = ({ i
 );
 
 const QuoteBlock: React.FC<{ author: string; children: React.ReactNode; }> = ({ author, children }) => (
-    <blockquote className="border-r-4 border-med-tech-blue bg-sterile-light-grey p-6 rounded-r-lg my-4 rtl:border-r-0 rtl:border-l-4 rtl:rounded-r-none rtl:rounded-l-lg">
-        <p className="text-lg italic text-gray-800">"{children}"</p>
+    <div className="border-r-4 border-med-tech-blue bg-sterile-light-grey p-8 rounded-r-lg my-6 rtl:border-r-0 rtl:border-l-4 rtl:rounded-r-none rtl:rounded-l-lg shadow-sm">
+        <div className="text-lg italic text-gray-800 rich-text-preview" dangerouslySetInnerHTML={{ __html: children as string }} />
         <footer className="mt-4 text-md font-semibold text-med-tech-blue text-start rtl:text-right">&mdash; {author}</footer>
-    </blockquote>
+    </div>
 );
 
 const CircularProgress: React.FC<{ score: number }> = ({ score }) => {
@@ -91,27 +93,8 @@ const ConferenceDetailsPage: React.FC<ConferenceDetailsPageProps> = ({ navigate,
 
   const analysis = event.analysis || event.event_analysis;
   
-  // Calculate Score from analysis if possible, else use event.rate
-  let calculatedScore = 0;
-  
-  const analysisKeys = [
-      { key: 'content_rate', weight: 25 },
-      { key: 'organisation_rate', weight: 20 },
-      { key: 'speaker_rate', weight: 15 },
-      { key: 'sponsering_rate', weight: 20 },
-      { key: 'scientific_impact_rate', weight: 20 },
-  ];
-
-  if (analysis) {
-      analysisKeys.forEach(k => {
-          const rawRate = Number(analysis[k.key as keyof typeof analysis]) || 0; // 0-10
-          const weight = k.weight;
-          const weightedScore = (rawRate / 10) * weight;
-          calculatedScore += weightedScore;
-      });
-  } else {
-      calculatedScore = Number(event.rate) * 10; // Fallback if no detailed analysis
-  }
+  // Calculate UI Score (0-100) from server rate (0-10)
+  const calculatedScore = Number(event.rate) * 10;
 
   const evaluationKeys = ['scientificContent', 'organization', 'speakers', 'sponsors', 'socialImpact'];
   const analysisMapping: any = {
@@ -133,15 +116,30 @@ const ConferenceDetailsPage: React.FC<ConferenceDetailsPageProps> = ({ navigate,
   const organizer = language === 'ar' ? event.organizer_ar : event.organizer_en;
   const description = language === 'ar' ? event.description_ar : event.description_en;
   const date = event.date_of_happening;
-  const location = event.location;
+  const location = language === 'ar' ? (event.location_ar || event.location) : event.location;
 
   // Handles both legacy (string array) and new (separate fields) structures
-  const subjects = language === 'ar' 
+  const subjectsRaw = language === 'ar' 
       ? (event.subjects_ar || (event.subjects ? event.subjects : [])) 
       : (event.subjects_en || (event.subjects ? event.subjects : []));
       
+  const subjects = subjectsRaw.map(s => {
+      if (s.includes(TOPIC_SEP)) {
+          const parts = s.split(TOPIC_SEP);
+          return { icon: parts[0], title: parts[1] };
+      }
+      return { icon: '🧬', title: s };
+  });
+
   const subjectsDesc = language === 'ar' ? event.subjects_description_ar : event.subjects_description_en;
   const authorsDesc = language === 'ar' ? event.authors_description_ar : event.authors_description_en;
+
+  // Multi-Comments Parsing
+  const commentsRaw = language === 'ar' ? event.comments_for_medpulse_ar : event.comments_for_medpulse_en;
+  const commentsList = commentsRaw ? commentsRaw.split(COMMENT_SEP).filter(Boolean) : [];
+
+  // Get current analysis summary
+  const analysisSummaryText = language === 'ar' ? analysis?.description_ar : analysis?.description_en;
 
   return (
       <div className="font-arabic bg-white">
@@ -168,7 +166,7 @@ const ConferenceDetailsPage: React.FC<ConferenceDetailsPageProps> = ({ navigate,
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 max-w-5xl">
 
             <DetailSection title={t({ar: "مقدمة عامة", en: "General Introduction"})}>
-                <p>{description}</p>
+                <p className="whitespace-pre-line">{description}</p>
             </DetailSection>
 
             {subjects && subjects.length > 0 && (
@@ -176,8 +174,8 @@ const ConferenceDetailsPage: React.FC<ConferenceDetailsPageProps> = ({ navigate,
                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 !-mx-4">
                      {subjects.map((subj, index) => (
                          <div key={index} className="bg-sterile-light-grey p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                            <span className="text-4xl">🧬</span>
-                            <h3 className="font-bold text-xl text-clinical-charcoal mt-3 mb-2">{subj}</h3>
+                            <span className="text-4xl">{subj.icon}</span>
+                            <h3 className="font-bold text-xl text-clinical-charcoal mt-3 mb-2">{subj.title}</h3>
                             {subjectsDesc && subjectsDesc[index] && <p className="text-sm text-gray-600">{subjectsDesc[index]}</p>}
                          </div>
                      ))}
@@ -212,7 +210,8 @@ const ConferenceDetailsPage: React.FC<ConferenceDetailsPageProps> = ({ navigate,
                        if (!criterion) return null;
                        const map = analysisMapping[key];
                        
-                       const rawRate = Number(analysis[map.key as keyof typeof analysis]) || 0; // 0-10
+                       // server score is 0-10, scale it to criterion max weight
+                       const rawRate = Number(analysis[map.key as keyof typeof analysis]) || 0;
                        const weightedScore = (rawRate / 10) * map.max;
                        const percentage = (rawRate / 10) * 100;
                        
@@ -273,20 +272,25 @@ const ConferenceDetailsPage: React.FC<ConferenceDetailsPageProps> = ({ navigate,
                         <CircularProgress score={calculatedScore} />
                     </div>
                 </div>
-                 <div className="mt-6 text-center bg-white/50 p-4 rounded-lg border border-gray-200">
-                    <p>{language === 'ar' ? event.comments_for_medpulse_ar : event.comments_for_medpulse_en}</p>
-                 </div>
+                 {analysisSummaryText && (
+                    <div className="mt-6 text-center bg-white/50 p-4 rounded-lg border border-gray-200">
+                        <p className="whitespace-pre-line text-gray-800">{analysisSummaryText}</p>
+                    </div>
+                 )}
             </DetailSection>
 
-            {/* Statements Section - Kept as is per instruction */}
-            <DetailSection title={t({ar: "تصريحات خاصة لـ MedPulse", en: "Statements for MedPulse"})}>
-                 <QuoteBlock author={t({ar: "الدكتورة ألفت الزعابي، رئيسة المؤتمر", en: "Dr. Olfat Al-Zaabi, Conference President"})}>
-                    {t({ar: "هدفنا أن يكون مؤتمر الفجيرة لطب الأطفال منصة علمية متجددة تسهم في تطوير الكفاءات الطبية الشابة في الدولة.", en: "Our goal is for the Fujairah Pediatrics Conference to be a renewable scientific platform that contributes to developing young medical talents in the country."})}
-                 </QuoteBlock>
-                 <QuoteBlock author={t({ar: "الدكتور خالد العطوي، أحد المشاركين البارزين", en: "Dr. Khaled Al-Atawi, a prominent participant"})}>
-                    {t({ar: "مؤتمر الفجيرة أثبت أن الفعاليات الطبية الإماراتية باتت نموذجًا في الاحتراف والتنظيم والمحتوى العلمي المتطور.", en: "The Fujairah conference proved that Emirati medical events have become a model of professionalism, organization, and advanced scientific content."})}
-                 </QuoteBlock>
-            </DetailSection>
+            {/* Statements Section - Supporting Multiple Comments for MedPulse */}
+            {commentsList.length > 0 && (
+                <DetailSection title={t({ar: "تصريحات خاصة لـ MedPulse", en: "Comments for MedPulse"})}>
+                    <div className="space-y-2">
+                        {commentsList.map((comment, idx) => (
+                            <QuoteBlock key={idx} author={t({ar: "فريق MedPulse", en: "MedPulse Team"})}>
+                                {comment}
+                            </QuoteBlock>
+                        ))}
+                    </div>
+                </DetailSection>
+            )}
 
             {(galleryImages.length > 0 || videos.length > 0) && (
                 <DetailSection title={t({ar: "تغطية مصورة من المؤتمر", en: "Photo & Video Coverage"})}>
@@ -329,6 +333,11 @@ const ConferenceDetailsPage: React.FC<ConferenceDetailsPageProps> = ({ navigate,
                 </div>
             </section>
         </div>
+        <style>{`
+            .rich-text-preview ul { list-style-type: disc; padding-inline-start: 1.5rem; margin-bottom: 1rem; }
+            .rich-text-preview ol { list-style-type: decimal; padding-inline-start: 1.5rem; margin-bottom: 1rem; }
+            .rich-text-preview p { margin-bottom: 0.5rem; }
+        `}</style>
       </div>
     );
 };

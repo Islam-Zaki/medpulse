@@ -209,24 +209,28 @@ const ArticlesPage: React.FC<ArticlesPageProps> = ({ navigate }) => {
                                 </div>
                                 {/* Pagination Controls */}
                                 {lastPage > 1 && (
-                                    <div className="flex justify-center items-center mt-12 gap-4">
-                                        <button 
-                                            onClick={() => handlePageChange(currentPage - 1)} 
-                                            disabled={currentPage === 1}
-                                            className="px-4 py-2 bg-white border border-gray-300 rounded-md disabled:opacity-50 hover:bg-gray-50"
-                                        >
-                                            {t({ar: 'السابق', en: 'Previous'})}
-                                        </button>
-                                        <span className="text-gray-600 font-medium">
-                                            {t({ar: 'صفحة', en: 'Page'})} {currentPage} {t({ar: 'من', en: 'of'})} {lastPage}
-                                        </span>
-                                        <button 
-                                            onClick={() => handlePageChange(currentPage + 1)} 
-                                            disabled={currentPage === lastPage}
-                                            className="px-4 py-2 bg-white border border-gray-300 rounded-md disabled:opacity-50 hover:bg-gray-50"
-                                        >
-                                            {t({ar: 'التالي', en: 'Next'})}
-                                        </button>
+                                    <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => handlePageChange(currentPage - 1)} 
+                                                disabled={currentPage === 1}
+                                                className="px-6 py-2 bg-white border-2 border-med-tech-blue text-med-tech-blue rounded-xl font-bold hover:bg-med-tech-blue hover:text-white transition-all disabled:opacity-30 disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-transparent shadow-sm"
+                                            >
+                                                {t({ar: 'السابق', en: 'Previous'})}
+                                            </button>
+                                            <button 
+                                                onClick={() => handlePageChange(currentPage + 1)} 
+                                                disabled={currentPage === lastPage}
+                                                className="px-6 py-2 bg-white border-2 border-med-tech-blue text-med-tech-blue rounded-xl font-bold hover:bg-med-tech-blue hover:text-white transition-all disabled:opacity-30 disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-transparent shadow-sm"
+                                            >
+                                                {t({ar: 'التالي', en: 'Next'})}
+                                            </button>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-gray-600 font-bold">
+                                            <span>{t({ar: 'صفحة', en: 'Page'})}</span>
+                                            <span className="w-10 h-10 flex items-center justify-center bg-med-tech-blue text-white rounded-full font-bold shadow-md">{currentPage}</span>
+                                            <span>{t({ar: 'من', en: 'of'})} {lastPage}</span>
+                                        </div>
                                     </div>
                                 )}
                             </>

@@ -1,32 +1,98 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '../../hooks/useToast';
 import { useLocalization } from '../../hooks/useLocalization';
 import { api } from '../../services/api';
-import type { ApiExpert, ExpertContact } from '../../types';
+import type { ApiExpert, ExpertContact, ApiEvent } from '../../types';
+import RichTextEditor from './RichTextEditor';
 
 interface ExpertsTabProps {
     experts: ApiExpert[];
+    events: ApiEvent[];
+    currentPage: number;
+    lastPage: number;
+    onPageChange: (page: number) => void;
     onRefresh: () => void;
 }
 
 const DOMAIN = 'https://medpulse-production.up.railway.app';
 
-const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
+const DynamicListEditor: React.FC<{ 
+    label: string; 
+    items: string[]; 
+    onChange: (items: string[]) => void; 
+    placeholder: string;
+    isRtl?: boolean;
+}> = ({ label, items, onChange, placeholder, isRtl }) => {
+    const { t } = useLocalization();
+    
+    const addItem = () => onChange([...items, '']);
+    const removeItem = (idx: number) => onChange(items.filter((_, i) => i !== idx));
+    const updateItem = (idx: number, val: string) => {
+        const newItems = [...items];
+        newItems[idx] = val;
+        onChange(newItems);
+    };
+
+    return (
+        <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 mb-1">{label}</label>
+            <div className="space-y-2">
+                {items.map((item, idx) => (
+                    <div key={idx} className="flex gap-2 items-center group">
+                        <div className="flex-grow relative">
+                             <input 
+                                className={`w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-med-tech-blue outline-none ${isRtl ? 'text-right' : ''}`}
+                                value={item}
+                                onChange={e => updateItem(idx, e.target.value)}
+                                placeholder={placeholder}
+                                dir={isRtl ? 'rtl' : 'ltr'}
+                            />
+                            <div className={`absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-med-tech-blue/30 ${isRtl ? '-right-3' : '-left-3'}`}></div>
+                        </div>
+                        <button 
+                            type="button"
+                            onClick={() => removeItem(idx)}
+                            className="text-red-400 hover:text-red-600 transition-colors p-1"
+                            title={t({ar: 'حذف', en: 'Remove'})}
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                ))}
+            </div>
+            <button 
+                type="button"
+                onClick={addItem}
+                className="text-xs font-bold text-med-tech-blue hover:text-blue-700 flex items-center gap-1 mt-1"
+            >
+                <span className="text-base">+</span> {t({ar: 'إضافة عنصر', en: 'Add Item'})}
+            </button>
+        </div>
+    );
+};
+
+const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, events, currentPage, lastPage, onPageChange, onRefresh }) => {
     const { showToast } = useToast();
     const { t } = useLocalization();
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [expertData, setExpertData] = useState<ApiExpert>({} as ApiExpert);
+    const [expertData, setExpertData] = useState<ApiExpert>({
+        number_of_events: 0,
+        years_of_experience: 0
+    } as ApiExpert);
     const [expertImage, setExpertImage] = useState<File | null>(null);
     
     // Arrays state
-    const [evalSpecsEn, setEvalSpecsEn] = useState('');
-    const [evalSpecsAr, setEvalSpecsAr] = useState('');
-    const [subSpecsEn, setSubSpecsEn] = useState('');
-    const [subSpecsAr, setSubSpecsAr] = useState('');
-    const [membershipsEn, setMembershipsEn] = useState('');
-    const [membershipsAr, setMembershipsAr] = useState('');
+    const [evalSpecsEn, setEvalSpecsEn] = useState<string[]>([]);
+    const [evalSpecsAr, setEvalSpecsAr] = useState<string[]>([]);
+    const [subSpecsEn, setSubSpecsEn] = useState<string[]>([]);
+    const [subSpecsAr, setSubSpecsAr] = useState<string[]>([]);
+    const [membershipsEn, setMembershipsEn] = useState<string[]>([]);
+    const [membershipsAr, setMembershipsAr] = useState<string[]>([]);
+    
+    // New array for coveredEventsIds
+    const [coveredEventsIds, setCoveredEventsIds] = useState<string[]>([]);
 
     // Contact state
     const [newContact, setNewContact] = useState({ name_en: '', name_ar: '', link: '' });
@@ -34,6 +100,14 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
     // Video
     const [videoUrl, setVideoUrl] = useState('');
     const [existingVideo, setExistingVideo] = useState<any>(null);
+
+    // Effect to auto-update number of events when IDs change
+    useEffect(() => {
+        setExpertData(prev => ({
+            ...prev,
+            number_of_events: coveredEventsIds.length
+        }));
+    }, [coveredEventsIds]);
 
     const extractYoutubeId = (url: string) => {
         if (!url) return '';
@@ -44,13 +118,17 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
 
     const handleEdit = (expert: ApiExpert) => {
         setExpertData(expert);
-        setEvalSpecsEn(expert.evaluated_specialties_en?.join(', ') || '');
-        setEvalSpecsAr(expert.evaluated_specialties_ar?.join(', ') || '');
-        setSubSpecsEn(expert.subspecialities_en?.join(', ') || '');
-        setSubSpecsAr(expert.subspecialities_ar?.join(', ') || '');
-        setMembershipsEn(expert.membership_en?.join(', ') || '');
-        setMembershipsAr(expert.membership_ar?.join(', ') || '');
+        setEvalSpecsEn(expert.evaluated_specialties_en || []);
+        setEvalSpecsAr(expert.evaluated_specialties_ar || []);
+        setSubSpecsEn(expert.subspecialities_en || []);
+        setSubSpecsAr(expert.subspecialities_ar || []);
+        setMembershipsEn(expert.membership_en || []);
+        setMembershipsAr(expert.membership_ar || []);
         
+        // Extract coveredEventsIds from the expert object
+        const ids = (expert as any).coveredEventsIds || [];
+        setCoveredEventsIds(ids.map(String));
+
         // Video
         const vid = expert.videos && expert.videos.length > 0 ? expert.videos[0] : null;
         setExistingVideo(vid);
@@ -66,10 +144,11 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
     };
 
     const resetForm = () => {
-        setExpertData({} as ApiExpert);
-        setEvalSpecsEn(''); setEvalSpecsAr('');
-        setSubSpecsEn(''); setSubSpecsAr('');
-        setMembershipsEn(''); setMembershipsAr('');
+        setExpertData({ number_of_events: 0, years_of_experience: 0 } as ApiExpert);
+        setEvalSpecsEn([]); setEvalSpecsAr([]);
+        setSubSpecsEn([]); setSubSpecsAr([]);
+        setMembershipsEn([]); setMembershipsAr([]);
+        setCoveredEventsIds([]);
         setExpertImage(null);
         setNewContact({ name_en: '', name_ar: '', link: '' });
         setVideoUrl('');
@@ -78,18 +157,25 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
         setShowForm(false);
     };
 
+    const toggleEventSelection = (id: string) => {
+        setCoveredEventsIds(prev => 
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
     const handleSubmit = async () => {
         try {
-            const processArr = (s: string) => s.split(',').map(v => v.trim()).filter(Boolean);
+            const clean = (arr: string[]) => arr.filter(s => s.trim() !== '');
             const payload = {
                 ...expertData,
-                evaluated_specialties_en: processArr(evalSpecsEn),
-                evaluated_specialties_ar: processArr(evalSpecsAr),
-                subspecialities_en: processArr(subSpecsEn),
-                subspecialities_ar: processArr(subSpecsAr),
-                membership_en: processArr(membershipsEn),
-                membership_ar: processArr(membershipsAr),
-                number_of_events: Number(expertData.number_of_events || 0),
+                evaluated_specialties_en: clean(evalSpecsEn),
+                evaluated_specialties_ar: clean(evalSpecsAr),
+                subspecialities_en: clean(subSpecsEn),
+                subspecialities_ar: clean(subSpecsAr),
+                membership_en: clean(membershipsEn),
+                membership_ar: clean(membershipsAr),
+                coveredEventsIds: coveredEventsIds, // Array of strings as required
+                number_of_events: coveredEventsIds.length,
                 years_of_experience: Number(expertData.years_of_experience || 0),
             };
 
@@ -100,17 +186,14 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
                 res = await api.createExpert(payload);
             }
 
-            // Check if response indicates success or has ID
             const expertId = res.id || res.data?.id || (isEditing ? expertData.id : null);
 
             if (expertImage && expertId) {
                 await api.uploadImage(expertImage as File, 'expert', expertId, 'expert_id');
             }
 
-            // Video saving logic
             if (videoUrl && expertId) {
                 const videoId = extractYoutubeId(videoUrl);
-                // Check if we need to save new video
                 if (!existingVideo || existingVideo.name !== videoId) {
                      await api.createVideo({
                          name: videoId,
@@ -122,7 +205,7 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
             
             showToast(isEditing ? t({ar: 'تم تحديث الخبير بنجاح', en: 'Expert updated successfully'}) : t({ar: 'تم إنشاء الخبير بنجاح', en: 'Expert created successfully'}), 'success');
             onRefresh();
-            if (!isEditing) resetForm(); // Keep form open if editing to allow adding contacts
+            if (!isEditing) resetForm(); 
         } catch (e) { 
             console.error(e);
             showToast(t({ar: 'فشل حفظ الخبير. تأكد من صحة البيانات.', en: 'Failed to save expert. Check data validity.'}), 'error'); 
@@ -138,18 +221,11 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
             showToast(t({ar: 'يرجى إدخال الاسم (EN) والرابط', en: 'Please enter Name (EN) and Link'}), 'error');
             return;
         }
-
         try {
-            const payload = {
-                ...newContact,
-                expert_id: expertData.id
-            };
+            const payload = { ...newContact, expert_id: expertData.id };
             const res = await api.createExpertContact(payload);
             showToast(t({ar: 'تم إضافة جهة الاتصال', en: 'Contact added'}), 'success');
-            
-            // Optimistically update local state
-            const createdContact = res.data || res; // Handle if API returns wrapped data
-            // Assuming response contains the created contact with ID
+            const createdContact = res.data || res;
             const newContactEntry: ExpertContact = {
                 id: createdContact.id || Date.now(),
                 expert_id: expertData.id,
@@ -157,14 +233,9 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
                 name_ar: newContact.name_ar,
                 link: newContact.link
             };
-
-            setExpertData(prev => ({
-                ...prev,
-                contacts: [...(prev.contacts || []), newContactEntry]
-            }));
-            
+            setExpertData(prev => ({ ...prev, contacts: [...(prev.contacts || []), newContactEntry] }));
             setNewContact({ name_en: '', name_ar: '', link: '' });
-            onRefresh(); // Refresh parent list to sync
+            onRefresh(); 
         } catch (e) {
             console.error(e);
             showToast(t({ar: 'فشل إضافة جهة الاتصال', en: 'Failed to add contact'}), 'error');
@@ -173,14 +244,10 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
 
     const handleDeleteContact = async (contactId: number) => {
         if (!window.confirm(t({ar: 'هل أنت متأكد من حذف جهة الاتصال هذه؟', en: 'Are you sure you want to delete this contact?'}))) return;
-        
         try {
             await api.deleteExpertContact(contactId);
             showToast(t({ar: 'تم حذف جهة الاتصال', en: 'Contact deleted'}), 'success');
-            setExpertData(prev => ({
-                ...prev,
-                contacts: prev.contacts?.filter(c => c.id !== contactId)
-            }));
+            setExpertData(prev => ({ ...prev, contacts: prev.contacts?.filter(c => c.id !== contactId) }));
             onRefresh();
         } catch (e) {
             console.error(e);
@@ -191,8 +258,13 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
     const inputClass = "w-full p-2.5 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-med-tech-blue focus:border-transparent outline-none transition-shadow";
     const labelClass = "block text-sm font-bold text-gray-700 mb-1.5";
 
+    const getExpertImageUrl = (e: ApiExpert) => {
+        const recentImage = e.images && e.images.length > 0 ? [...e.images].sort((a, b) => b.id - a.id)[0] : null;
+        return recentImage ? `${DOMAIN}${recentImage.base_url}${recentImage.name}` : e.image_url;
+    };
+
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 pb-20">
             <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                 <div>
                     <h3 className="text-xl font-bold text-med-blue">{t({ar: 'إدارة الخبراء', en: 'Experts Management'})}</h3>
@@ -210,76 +282,93 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
                 <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200 animate-fade-in-down">
                     <h4 className="text-lg font-bold text-gray-800 mb-6 border-b pb-2">{isEditing ? t({ar: 'تعديل الخبير', en: 'Edit Expert'}) : t({ar: 'إنشاء خبير جديد', en: 'Create New Expert'})}</h4>
                     
-                    <div className="space-y-6">
-                        {/* Personal Info */}
-                        <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                    <div className="space-y-10">
+                        {/* 1. Personal Info */}
+                        <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
                             <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'المعلومات الشخصية', en: 'Personal Information'})}</h5>
                             <div className="grid md:grid-cols-2 gap-6 mb-4">
-                                <div><label className={labelClass}>{t({ar: 'الاسم (إنجليزي)', en: 'Name (English)'})}</label><input className={inputClass} value={expertData.name_en || ''} onChange={e => setExpertData({...expertData, name_en: e.target.value})} placeholder="e.g. Dr. John Doe" /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'الاسم (عربي)', en: 'Name (Arabic)'})}</label><input className={inputClass} value={expertData.name_ar || ''} onChange={e => setExpertData({...expertData, name_ar: e.target.value})} placeholder="د. فلان الفلاني" /></div>
+                                <div><label className={labelClass}>{t({ar: 'الاسم (إنجليزي)', en: 'Name (English)'})}</label><input className={inputClass} value={expertData.name_en || ''} onChange={e => setExpertData(prev => ({...prev, name_en: e.target.value}))} placeholder="e.g. Dr. John Doe" /></div>
+                                <div dir="rtl"><label className={labelClass}>{t({ar: 'الاسم (عربي)', en: 'Name (Arabic)'})}</label><input className={inputClass} value={expertData.name_ar || ''} onChange={e => setExpertData(prev => ({...prev, name_ar: e.target.value}))} placeholder="د. فلان الفلاني" /></div>
                             </div>
                             <div className="grid md:grid-cols-2 gap-6 mb-4">
-                                <div><label className={labelClass}>{t({ar: 'المسمى الوظيفي (إنجليزي)', en: 'Job Title (English)'})}</label><input className={inputClass} value={expertData.job_en || ''} onChange={e => setExpertData({...expertData, job_en: e.target.value})} placeholder="e.g. Dermatologist" /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'المسمى الوظيفي (عربي)', en: 'Job Title (Arabic)'})}</label><input className={inputClass} value={expertData.job_ar || ''} onChange={e => setExpertData({...expertData, job_ar: e.target.value})} placeholder="طبيب جلدية" /></div>
+                                <div><label className={labelClass}>{t({ar: 'المسمى الوظيفي (إنجليزي)', en: 'Job Title (English)'})}</label><input className={inputClass} value={expertData.job_en || ''} onChange={e => setExpertData(prev => ({...prev, job_en: e.target.value}))} placeholder="e.g. Dermatologist" /></div>
+                                <div dir="rtl"><label className={labelClass}>{t({ar: 'المسمى الوظيفي (عربي)', en: 'Job Title (Arabic)'})}</label><input className={inputClass} value={expertData.job_ar || ''} onChange={e => setExpertData(prev => ({...prev, job_ar: e.target.value}))} placeholder="طبيب جلدية" /></div>
                             </div>
-                            <div className="grid md:grid-cols-2 gap-6 mb-4">
-                                <div><label className={labelClass}>{t({ar: 'الوظيفة الحالية (إنجليزي)', en: 'Current Job (English)'})}</label><input className={inputClass} value={expertData.current_job_en || ''} onChange={e => setExpertData({...expertData, current_job_en: e.target.value})} /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'الوظيفة الحالية (عربي)', en: 'Current Job (Arabic)'})}</label><input className={inputClass} value={expertData.current_job_ar || ''} onChange={e => setExpertData({...expertData, current_job_ar: e.target.value})} /></div>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div><label className={labelClass}>{t({ar: 'الوظيفة الحالية (إنجليزي)', en: 'Current Job (English)'})}</label><input className={inputClass} value={expertData.current_job_en || ''} onChange={e => setExpertData(prev => ({...prev, current_job_en: e.target.value}))} /></div>
+                                <div dir="rtl"><label className={labelClass}>{t({ar: 'الوظيفة الحالية (عربي)', en: 'Current Job (Arabic)'})}</label><input className={inputClass} value={expertData.current_job_ar || ''} onChange={e => setExpertData(prev => ({...prev, current_job_ar: e.target.value}))} /></div>
                             </div>
                         </div>
 
-                        {/* MedPulse Role */}
-                        <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                        {/* 2. Bio Section */}
+                        <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                            <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'النبذة التعريفية (Bio)', en: 'Biography (Bio)'})}</h5>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className={labelClass}>{t({ar: 'نبذة (إنجليزي)', en: 'Bio (English)'})}</label>
+                                    <RichTextEditor height="250px" value={expertData.description_en || ''} onChange={v => setExpertData(prev => ({...prev, description_en: v}))} placeholder="Write English bio..." />
+                                </div>
+                                <div dir="rtl">
+                                    <label className={labelClass}>{t({ar: 'نبذة (عربي)', en: 'Bio (Arabic)'})}</label>
+                                    <RichTextEditor height="250px" value={expertData.description_ar || ''} onChange={v => setExpertData(prev => ({...prev, description_ar: v}))} placeholder="اكتب النبذة بالعربي..." />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 3. Stats Section */}
+                        <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                            <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'الإحصائيات والخبرة', en: 'Stats & Experience'})}</h5>
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <label className={labelClass}>{t({ar: 'سنوات الخبرة', en: 'Years of Experience'})}</label>
+                                    <input type="number" className={inputClass} value={expertData.years_of_experience || ''} onChange={e => setExpertData(prev => ({...prev, years_of_experience: Number(e.target.value)}))} />
+                                </div>
+                                <div>
+                                    <label className={labelClass}>{t({ar: 'عدد المؤتمرات التي قيمها (تلقائي)', en: 'Number of Events Evaluated (Auto)'})}</label>
+                                    <input type="text" className={`${inputClass} bg-blue-50 font-bold`} value={coveredEventsIds.length} readOnly />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 4. MedPulse Role */}
+                        <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
                             <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'دور في ميد بلس', en: 'MedPulse Role'})}</h5>
                             <div className="grid md:grid-cols-2 gap-6 mb-4">
-                                <div><label className={labelClass}>{t({ar: 'الدور (إنجليزي)', en: 'Role (English)'})}</label><input className={inputClass} value={expertData.medpulse_role_en || ''} onChange={e => setExpertData({...expertData, medpulse_role_en: e.target.value})} /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'الدور (عربي)', en: 'Role (Arabic)'})}</label><input className={inputClass} value={expertData.medpulse_role_ar || ''} onChange={e => setExpertData({...expertData, medpulse_role_ar: e.target.value})} /></div>
+                                <div><label className={labelClass}>{t({ar: 'الدور (إنجليزي)', en: 'Role (English)'})}</label><input className={inputClass} value={expertData.medpulse_role_en || ''} onChange={e => setExpertData(prev => ({...prev, medpulse_role_en: e.target.value}))} /></div>
+                                <div dir="rtl"><label className={labelClass}>{t({ar: 'الدور (عربي)', en: 'Role (Arabic)'})}</label><input className={inputClass} value={expertData.medpulse_role_ar || ''} onChange={e => setExpertData(prev => ({...prev, medpulse_role_ar: e.target.value}))} /></div>
                             </div>
                             <div className="grid md:grid-cols-2 gap-6 mb-4">
-                                <div><label className={labelClass}>{t({ar: 'وصف الدور (إنجليزي)', en: 'Role Description (English)'})}</label><textarea rows={2} className={inputClass} value={expertData.medpulse_role_description_en || ''} onChange={e => setExpertData({...expertData, medpulse_role_description_en: e.target.value})} /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'وصف الدور (عربي)', en: 'Role Description (Arabic)'})}</label><textarea rows={2} className={inputClass} value={expertData.medpulse_role_description_ar || ''} onChange={e => setExpertData({...expertData, medpulse_role_description_ar: e.target.value})} /></div>
-                            </div>
-                            <div className="grid md:grid-cols-2 gap-6 mb-4">
-                                <div><label className={labelClass}>{t({ar: 'نوع التغطية (إنجليزي)', en: 'Coverage Type (English)'})}</label><input className={inputClass} value={expertData.coverage_type_en || ''} onChange={e => setExpertData({...expertData, coverage_type_en: e.target.value})} /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'نوع التغطية (عربي)', en: 'Coverage Type (Arabic)'})}</label><input className={inputClass} value={expertData.coverage_type_ar || ''} onChange={e => setExpertData({...expertData, coverage_type_ar: e.target.value})} /></div>
-                            </div>
-                        </div>
-
-                        {/* Stats & Description */}
-                        <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
-                            <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'التفاصيل والإحصائيات', en: 'Details & Statistics'})}</h5>
-                            <div className="grid md:grid-cols-2 gap-6 mb-4">
-                                <div><label className={labelClass}>{t({ar: 'سنوات الخبرة', en: 'Years of Experience'})}</label><input type="number" className={inputClass} value={expertData.years_of_experience || ''} onChange={e => setExpertData({...expertData, years_of_experience: Number(e.target.value)})} /></div>
-                                <div><label className={labelClass}>{t({ar: 'عدد المؤتمرات التي قيمها', en: 'Number of Events Evaluated'})}</label><input type="number" className={inputClass} value={expertData.number_of_events || ''} onChange={e => setExpertData({...expertData, number_of_events: Number(e.target.value)})} /></div>
+                                <div><label className={labelClass}>{t({ar: 'وصف الدور (إنجليزي)', en: 'Role Description (English)'})}</label><textarea rows={2} className={inputClass} value={expertData.medpulse_role_description_en || ''} onChange={e => setExpertData(prev => ({...prev, medpulse_role_description_en: e.target.value}))} /></div>
+                                <div dir="rtl"><label className={labelClass}>{t({ar: 'وصف الدور (عربي)', en: 'Role Description (Arabic)'})}</label><textarea rows={2} className={inputClass} value={expertData.medpulse_role_description_ar || ''} onChange={e => setExpertData(prev => ({...prev, medpulse_role_description_ar: e.target.value}))} /></div>
                             </div>
                             <div className="grid md:grid-cols-2 gap-6">
-                                <div><label className={labelClass}>{t({ar: 'نبذة (إنجليزي)', en: 'Bio (English)'})}</label><textarea rows={3} className={inputClass} value={expertData.description_en || ''} onChange={e => setExpertData({...expertData, description_en: e.target.value})} /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'نبذة (عربي)', en: 'Bio (Arabic)'})}</label><textarea rows={3} className={inputClass} value={expertData.description_ar || ''} onChange={e => setExpertData({...expertData, description_ar: e.target.value})} /></div>
+                                <div><label className={labelClass}>{t({ar: 'نوع التغطية (إنجليزي)', en: 'Coverage Type (English)'})}</label><input className={inputClass} value={expertData.coverage_type_en || ''} onChange={e => setExpertData(prev => ({...prev, coverage_type_en: e.target.value}))} /></div>
+                                <div dir="rtl"><label className={labelClass}>{t({ar: 'نوع التغطية (عربي)', en: 'Coverage Type (Arabic)'})}</label><input className={inputClass} value={expertData.coverage_type_ar || ''} onChange={e => setExpertData(prev => ({...prev, coverage_type_ar: e.target.value}))} /></div>
                             </div>
                         </div>
 
-                        {/* Lists */}
-                        <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
-                            <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'القوائم (مفصولة بفاصلة)', en: 'Lists (Comma Separated)'})}</h5>
-                            <div className="grid md:grid-cols-2 gap-6 mb-4">
-                                <div><label className={labelClass}>{t({ar: 'التخصصات التي يقيمها (إنجليزي)', en: 'Evaluated Specialties (EN)'})}</label><input className={inputClass} value={evalSpecsEn} onChange={e => setEvalSpecsEn(e.target.value)} /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'التخصصات التي يقيمها (عربي)', en: 'Evaluated Specialties (AR)'})}</label><input className={inputClass} value={evalSpecsAr} onChange={e => setEvalSpecsAr(e.target.value)} /></div>
-                            </div>
-                            <div className="grid md:grid-cols-2 gap-6 mb-4">
-                                <div><label className={labelClass}>{t({ar: 'التخصصات الدقيقة (إنجليزي)', en: 'Subspecialties (EN)'})}</label><input className={inputClass} value={subSpecsEn} onChange={e => setSubSpecsEn(e.target.value)} /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'التخصصات الدقيقة (عربي)', en: 'Subspecialties (AR)'})}</label><input className={inputClass} value={subSpecsAr} onChange={e => setSubSpecsAr(e.target.value)} /></div>
-                            </div>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div><label className={labelClass}>{t({ar: 'العضويات (إنجليزي)', en: 'Memberships (EN)'})}</label><input className={inputClass} value={membershipsEn} onChange={e => setMembershipsEn(e.target.value)} /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'العضويات (عربي)', en: 'Memberships (AR)'})}</label><input className={inputClass} value={membershipsAr} onChange={e => setMembershipsAr(e.target.value)} /></div>
+                        {/* 5. Bullet Point Lists */}
+                        <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                            <h5 className="font-bold text-med-tech-blue mb-6 uppercase text-xs tracking-wider border-b pb-2">{t({ar: 'القوائم والنقاط', en: 'Bullet Point Lists'})}</h5>
+                            <div className="space-y-8">
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <DynamicListEditor label={t({ar: 'التخصصات التي يقيمها (إنجليزي)', en: 'Evaluated Specialties (EN)'})} items={evalSpecsEn} onChange={setEvalSpecsEn} placeholder="Cardiology..." />
+                                    <DynamicListEditor label={t({ar: 'التخصصات التي يقيمها (عربي)', en: 'Evaluated Specialties (AR)'})} items={evalSpecsAr} onChange={setEvalSpecsAr} placeholder="أمراض القلب..." isRtl />
+                                </div>
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <DynamicListEditor label={t({ar: 'التخصصات الدقيقة (إنجليزي)', en: 'Subspecialties (EN)'})} items={subSpecsEn} onChange={setSubSpecsEn} placeholder="Interventional Cardiology..." />
+                                    <DynamicListEditor label={t({ar: 'التخصصات الدقيقة (عربي)', en: 'Subspecialties (AR)'})} items={subSpecsAr} onChange={setSubSpecsAr} placeholder="أمراض القلب التداخلية..." isRtl />
+                                </div>
+                                <div className="grid md:grid-cols-2 gap-8">
+                                    <DynamicListEditor label={t({ar: 'العضويات (إنجليزي)', en: 'Memberships (EN)'})} items={membershipsEn} onChange={setMembershipsEn} placeholder="European Society of Cardiology..." />
+                                    <DynamicListEditor label={t({ar: 'العضويات (عربي)', en: 'Memberships (AR)'})} items={membershipsAr} onChange={setMembershipsAr} placeholder="جمعية القلب الأوروبية..." isRtl />
+                                </div>
                             </div>
                         </div>
 
-                        {/* Contacts Section */}
-                        <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
+                        {/* 6. Contacts */}
+                        <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
                             <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'معلومات التواصل', en: 'Contact Information'})}</h5>
-                            
-                            {/* Existing Contacts List */}
                             {expertData.contacts && expertData.contacts.length > 0 ? (
                                 <div className="space-y-3 mb-6">
                                     {expertData.contacts.map(contact => (
@@ -289,12 +378,7 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
                                                 <span className="text-gray-600">/ {contact.name_ar}</span>
                                                 <a href={contact.link} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline truncate max-w-xs">{contact.link}</a>
                                             </div>
-                                            <button 
-                                                onClick={() => handleDeleteContact(contact.id)}
-                                                className="text-red-500 hover:text-red-700 text-sm font-bold"
-                                            >
-                                                {t({ar: 'حذف', en: 'Delete'})}
-                                            </button>
+                                            <button type="button" onClick={() => handleDeleteContact(contact.id)} className="text-red-500 hover:text-red-700 text-sm font-bold">{t({ar: 'حذف', en: 'Delete'})}</button>
                                         </div>
                                     ))}
                                 </div>
@@ -302,41 +386,63 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
                                 <p className="text-sm text-gray-500 mb-6 italic text-center">{t({ar: 'لا توجد جهات اتصال', en: 'No contacts found'})}</p>
                             )}
 
-                            {/* Add New Contact Form */}
                             {expertData.id ? (
                                 <div className="bg-white p-4 rounded border border-gray-200">
                                     <h6 className="font-bold text-sm text-gray-700 mb-3">{t({ar: 'إضافة جهة اتصال جديدة', en: 'Add New Contact'})}</h6>
                                     <div className="grid md:grid-cols-3 gap-4 mb-3">
-                                        <div><input className={inputClass} value={newContact.name_en} onChange={e => setNewContact({...newContact, name_en: e.target.value})} placeholder={t({ar: 'المنصة (EN)', en: 'Platform (EN)'})} /></div>
-                                        <div dir="rtl"><input className={inputClass} value={newContact.name_ar} onChange={e => setNewContact({...newContact, name_ar: e.target.value})} placeholder={t({ar: 'المنصة (AR)', en: 'Platform (AR)'})} /></div>
-                                        <div><input className={inputClass} value={newContact.link} onChange={e => setNewContact({...newContact, link: e.target.value})} placeholder="https://..." /></div>
+                                        <input className={inputClass} value={newContact.name_en} onChange={e => setNewContact(prev => ({...prev, name_en: e.target.value}))} placeholder={t({ar: 'المنصة (EN)', en: 'Platform (EN)'})} />
+                                        <div dir="rtl"><input className={inputClass} value={newContact.name_ar} onChange={e => setNewContact(prev => ({...prev, name_ar: e.target.value}))} placeholder={t({ar: 'المنصة (AR)', en: 'Platform (AR)'})} /></div>
+                                        <input className={inputClass} value={newContact.link} onChange={e => setNewContact(prev => ({...prev, link: e.target.value}))} placeholder="https://..." />
                                     </div>
-                                    <button onClick={handleAddContact} className="w-full bg-med-tech-blue text-white font-bold py-2 rounded hover:bg-blue-700 text-sm">
-                                        {t({ar: 'إضافة', en: 'Add Contact'})}
-                                    </button>
+                                    <button type="button" onClick={handleAddContact} className="w-full bg-med-tech-blue text-white font-bold py-2 rounded hover:bg-blue-700 text-sm">{t({ar: 'إضافة', en: 'Add Contact'})}</button>
                                 </div>
                             ) : (
-                                <div className="text-center p-3 bg-yellow-50 text-yellow-800 rounded text-sm">
-                                    {t({ar: 'يرجى حفظ الخبير أولاً لإضافة جهات الاتصال', en: 'Please save expert first to add contacts'})}
-                                </div>
+                                <div className="text-center p-3 bg-yellow-50 text-yellow-800 rounded text-sm">{t({ar: 'يرجى حفظ الخبير أولاً لإضافة جهات الاتصال', en: 'Please save expert first to add contacts'})}</div>
                             )}
                         </div>
 
-                        {/* Image */}
-                        <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
-                            <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'صورة الملف الشخصي', en: 'Profile Image'})}</h5>
-                            <label className={labelClass}>{t({ar: 'رفع صورة', en: 'Upload Image'})}</label>
-                            <input type="file" onChange={e => setExpertImage(e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-med-tech-blue file:text-white hover:file:bg-blue-700 cursor-pointer" />
+                        {/* 7. Evaluated Conferences (NEW SECTION POSITION) */}
+                        <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                            <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'المؤتمرات التي تم تقييمها', en: 'Evaluated Conferences'})}</h5>
+                            <div className="mt-2">
+                                <label className={labelClass}>{t({ar: 'اختر المؤتمرات التي قيمها هذا الخبير', en: 'Select conferences evaluated by this expert'})}</label>
+                                <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-md bg-white p-3 space-y-2">
+                                    {events.map(event => (
+                                        <label key={event.id} className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-1.5 rounded transition-colors">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={coveredEventsIds.includes(event.id.toString())}
+                                                onChange={() => toggleEventSelection(event.id.toString())}
+                                                className="w-4 h-4 rounded text-med-tech-blue focus:ring-med-tech-blue border-gray-300"
+                                            />
+                                            <div className="flex flex-col ml-3 rtl:mr-3">
+                                                <span className="text-sm font-medium text-gray-800">{event.title_en}</span>
+                                                <span className="text-xs text-gray-500">{event.title_ar}</span>
+                                            </div>
+                                        </label>
+                                    ))}
+                                    {events.length === 0 && <p className="text-sm text-gray-400 italic p-2">{t({ar: 'لا توجد مؤتمرات متاحة', en: 'No conferences available'})}</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 8. Media */}
+                        <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                            <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'الصور والفيديو', en: 'Photos & Video'})}</h5>
+                            {isEditing && (
+                                <div className="mb-4 flex items-center gap-4 bg-white p-3 rounded border border-gray-200 w-fit">
+                                    <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-300 bg-gray-100">
+                                        <img src={getExpertImageUrl(expertData)} alt="Current" className="w-full h-full object-cover" onError={(e: any) => e.target.src = 'https://picsum.photos/seed/doc-placeholder/400/400'} />
+                                    </div>
+                                    <span className="text-xs font-bold text-gray-500 uppercase">{t({ar: 'الصورة الحالية', en: 'Current Image'})}</span>
+                                </div>
+                            )}
+                            <label className={labelClass}>{t({ar: 'رفع صورة جديدة', en: 'Upload New Image'})}</label>
+                            <input type="file" accept="image/*" onChange={e => setExpertImage(e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-med-tech-blue file:text-white hover:file:bg-blue-700 cursor-pointer" />
                             
-                            {/* Video Input */}
-                            <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="mt-6 pt-4 border-t border-gray-200">
                                 <label className={labelClass}>{t({ar: 'رابط فيديو (يوتيوب)', en: 'Video URL (YouTube)'})}</label>
-                                <input 
-                                    className={inputClass} 
-                                    value={videoUrl} 
-                                    onChange={e => setVideoUrl(e.target.value)} 
-                                    placeholder="https://www.youtube.com/watch?v=..." 
-                                />
+                                <input className={inputClass} value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
                                 {videoUrl && (
                                     <div className="mt-2 text-xs text-blue-600">
                                         {extractYoutubeId(videoUrl) ? t({ar: 'تم التعرف على الفيديو', en: 'Video detected'}) : t({ar: 'رابط غير صالح', en: 'Invalid URL'})}
@@ -345,14 +451,14 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
                             </div>
                         </div>
 
-                        <button onClick={handleSubmit} className="w-full bg-med-vital-green text-white font-bold py-3 rounded-lg hover:bg-green-700 shadow-md transition-all text-lg">
+                        <button onClick={handleSubmit} className="w-full bg-med-vital-green text-white font-bold py-4 rounded-xl hover:bg-green-700 shadow-xl transition-all text-lg transform hover:-translate-y-1">
                             {isEditing ? t({ar: 'تحديث الخبير', en: 'Update Expert'}) : t({ar: 'حفظ الخبير', en: 'Save Expert'})}
                         </button>
                     </div>
                 </div>
             )}
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-100 text-gray-700 uppercase text-xs tracking-wider font-bold">
                         <tr>
@@ -365,22 +471,12 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                         {experts.map(e => {
-                            const recentImage = e.images && e.images.length > 0 
-                                ? [...e.images].sort((a, b) => b.id - a.id)[0] 
-                                : null;
-                            const imageUrl = recentImage 
-                                ? `${DOMAIN}${recentImage.base_url}${recentImage.name}` 
-                                : e.image_url;
-
+                            const imageUrl = getExpertImageUrl(e);
                             return (
                             <tr key={e.id} className="hover:bg-gray-50 transition-colors">
                                 <td className="p-4">
                                     <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-200 bg-gray-100">
-                                        {imageUrl ? (
-                                            <img src={imageUrl} alt={e.name_en} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Img</div>
-                                        )}
+                                        {imageUrl ? <img src={imageUrl} alt={e.name_en} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Img</div>}
                                     </div>
                                 </td>
                                 <td className="p-4">
@@ -395,11 +491,32 @@ const ExpertsTab: React.FC<ExpertsTabProps> = ({ experts, onRefresh }) => {
                                 </td>
                             </tr>
                         )})}
-                        {experts.length === 0 && (
-                            <tr><td colSpan={5} className="p-8 text-center text-gray-500">{t({ar: 'لا يوجد خبراء', en: 'No experts found.'})}</td></tr>
-                        )}
+                        {experts.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-gray-500">{t({ar: 'لا يوجد خبراء', en: 'No experts found.'})}</td></tr>}
                     </tbody>
                 </table>
+                {lastPage > 1 && (
+                    <div className="flex justify-between items-center p-6 bg-white border-t border-gray-200 shadow-inner">
+                        <button 
+                            onClick={() => onPageChange(currentPage - 1)} 
+                            disabled={currentPage === 1} 
+                            className="px-6 py-2 border-2 border-med-tech-blue text-med-tech-blue rounded-xl font-black hover:bg-med-tech-blue hover:text-white transition-all disabled:opacity-30 disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-transparent"
+                        >
+                            {t({ar: 'السابق', en: 'Previous'})}
+                        </button>
+                        <div className="flex items-center gap-2 font-black text-gray-500 text-sm uppercase tracking-widest">
+                            <span>{t({ar: 'صفحة', en: 'Page'})}</span>
+                            <span className="w-8 h-8 flex items-center justify-center bg-med-tech-blue text-white rounded-lg shadow-md">{currentPage}</span>
+                            <span>{t({ar: 'من', en: 'of'})} {lastPage}</span>
+                        </div>
+                        <button 
+                            onClick={() => onPageChange(currentPage + 1)} 
+                            disabled={currentPage === lastPage} 
+                            className="px-6 py-2 border-2 border-med-tech-blue text-med-tech-blue rounded-xl font-black hover:bg-med-tech-blue hover:text-white transition-all disabled:opacity-30 disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-transparent"
+                        >
+                            {t({ar: 'التالي', en: 'Next'})}
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

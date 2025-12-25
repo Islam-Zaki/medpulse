@@ -119,7 +119,12 @@ const ArticleDetailsPage: React.FC<ArticleDetailsPageProps> = ({ navigate, artic
                   <div className="grid gap-4">
                       {videos.map((vid: any, idx: number) => (
                           <div key={`vid-${idx}`} className="rounded-xl overflow-hidden shadow-lg aspect-video bg-black">
-                              <div className="flex items-center justify-center h-full text-white">Video Content</div>
+                              <iframe 
+                                src={`https://www.youtube.com/embed/${vid.name}`} 
+                                className="w-full h-full" 
+                                title={`Article Video ${idx + 1}`}
+                                allowFullScreen
+                              />
                           </div>
                       ))}
                   </div>
@@ -136,12 +141,13 @@ const ArticleDetailsPage: React.FC<ArticleDetailsPageProps> = ({ navigate, artic
               )}
           </div>
 
-          {/* Description Section */}
-          <div className="prose lg:prose-xl max-w-none text-gray-800 leading-relaxed font-arabic mb-12">
-            <p className="whitespace-pre-line">{description}</p>
-          </div>
+          {/* Description Section - UPDATED for Rich Text */}
+          <div 
+            className="rich-text-container prose lg:prose-xl max-w-none text-gray-800 leading-relaxed font-arabic mb-12"
+            dangerouslySetInnerHTML={{ __html: description }}
+          />
 
-          {/* Authors Section (Similar style to events) */}
+          {/* Authors Section */}
           {article.authors && article.authors.length > 0 && (
               <div className="mt-12 pt-10 border-t border-gray-200">
                   <h3 className="text-2xl font-bold text-clinical-charcoal mb-8 text-center">{t({ar: 'المؤلفون والمشاركون', en: 'Authors & Contributors'})}</h3>
@@ -193,6 +199,14 @@ const ArticleDetailsPage: React.FC<ArticleDetailsPageProps> = ({ navigate, artic
             </div>
         )}
       </div>
+      <style>{`
+        .rich-text-container h2 { font-size: 1.875rem; font-weight: bold; margin-top: 2.5rem; margin-bottom: 1.25rem; color: #272827; border-bottom: 2px solid #1463be20; padding-bottom: 0.5rem; }
+        .rich-text-container h3 { font-size: 1.5rem; font-weight: bold; margin-top: 2rem; color: #1463be; }
+        .rich-text-container ul { list-style-type: disc; padding-inline-start: 1.5rem; margin-bottom: 1.5rem; }
+        .rich-text-container ol { list-style-type: decimal; padding-inline-start: 1.5rem; margin-bottom: 1.5rem; }
+        .rich-text-container p { margin-bottom: 1rem; }
+        .rich-text-container a { color: #1463be; text-decoration: underline; }
+      `}</style>
     </div>
   );
 };

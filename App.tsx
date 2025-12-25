@@ -23,6 +23,7 @@ import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import AIChatWidget from './components/AIChatWidget';
 
 
 const App: React.FC = () => {
@@ -126,6 +127,8 @@ const App: React.FC = () => {
           </main>
           
           {page.name !== 'admin' && <Footer navigate={navigate} />}
+          
+          {page.name !== 'admin' && <AIChatWidget />}
         </div>
       </ToastProvider>
     </LocalizationProvider>

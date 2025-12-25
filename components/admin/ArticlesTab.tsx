@@ -4,6 +4,7 @@ import { useToast } from '../../hooks/useToast';
 import { useLocalization } from '../../hooks/useLocalization';
 import { api } from '../../services/api';
 import type { ApiArticle, Category, ApiAuthor } from '../../types';
+import RichTextEditor from './RichTextEditor';
 
 interface ArticlesTabProps {
     articles: ApiArticle[];
@@ -22,7 +23,12 @@ const ArticlesTab: React.FC<ArticlesTabProps> = ({ articles, categories, authors
     const { t } = useLocalization();
     const [showForm, setShowForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [articleData, setArticleData] = useState<ApiArticle>({} as ApiArticle);
+    const [articleData, setArticleData] = useState<ApiArticle>({ 
+        title_en: '', 
+        title_ar: '', 
+        description_en: '', 
+        description_ar: '' 
+    } as ApiArticle);
     
     // Multi-select states
     const [selectedAuthorIds, setSelectedAuthorIds] = useState<number[]>([]);
@@ -71,7 +77,7 @@ const ArticlesTab: React.FC<ArticlesTabProps> = ({ articles, categories, authors
     };
 
     const resetForm = () => {
-        setArticleData({} as ApiArticle);
+        setArticleData({ title_en: '', title_ar: '', description_en: '', description_ar: '' } as ApiArticle);
         setSelectedAuthorIds([]);
         setArticleImages([]);
         setVideoUrl('');
@@ -220,12 +226,34 @@ const ArticlesTab: React.FC<ArticlesTabProps> = ({ articles, categories, authors
                         <div className="bg-gray-50 p-4 rounded-md border border-gray-100">
                             <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'معلومات المقال', en: 'Article Information'})}</h5>
                             <div className="grid md:grid-cols-2 gap-6 mb-4">
-                                <div><label className={labelClass}>{t({ar: 'العنوان (إنجليزي)', en: 'Title (English)'})}</label><input className={inputClass} value={articleData.title_en || ''} onChange={e => setArticleData({...articleData, title_en: e.target.value})} placeholder="Article Title" /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'العنوان (عربي)', en: 'Title (Arabic)'})}</label><input className={inputClass} value={articleData.title_ar || ''} onChange={e => setArticleData({...articleData, title_ar: e.target.value})} placeholder="عنوان المقال" /></div>
+                                <div>
+                                    <label className={labelClass}>{t({ar: 'العنوان (إنجليزي)', en: 'Title (English)'})}</label>
+                                    <input className={inputClass} value={articleData.title_en || ''} onChange={e => setArticleData(prev => ({...prev, title_en: e.target.value}))} placeholder="Article Title" />
+                                </div>
+                                <div dir="rtl">
+                                    <label className={labelClass}>{t({ar: 'العنوان (عربي)', en: 'Title (Arabic)'})}</label>
+                                    <input className={inputClass} value={articleData.title_ar || ''} onChange={e => setArticleData(prev => ({...prev, title_ar: e.target.value}))} placeholder="عنوان المقال" />
+                                </div>
                             </div>
                             <div className="grid md:grid-cols-2 gap-6">
-                                <div><label className={labelClass}>{t({ar: 'الوصف (إنجليزي)', en: 'Description (English)'})}</label><textarea rows={4} className={inputClass} value={articleData.description_en || ''} onChange={e => setArticleData({...articleData, description_en: e.target.value})} /></div>
-                                <div dir="rtl"><label className={labelClass}>{t({ar: 'الوصف (عربي)', en: 'Description (Arabic)'})}</label><textarea rows={4} className={inputClass} value={articleData.description_ar || ''} onChange={e => setArticleData({...articleData, description_ar: e.target.value})} /></div>
+                                <div>
+                                    <label className={labelClass}>{t({ar: 'الوصف (إنجليزي)', en: 'Description (English)'})}</label>
+                                    <RichTextEditor 
+                                        height="250px"
+                                        value={articleData.description_en || ''} 
+                                        onChange={val => setArticleData(prev => ({...prev, description_en: val}))} 
+                                        placeholder="Write English article content..."
+                                    />
+                                </div>
+                                <div dir="rtl">
+                                    <label className={labelClass}>{t({ar: 'الوصف (عربي)', en: 'Description (Arabic)'})}</label>
+                                    <RichTextEditor 
+                                        height="250px"
+                                        value={articleData.description_ar || ''} 
+                                        onChange={val => setArticleData(prev => ({...prev, description_ar: val}))} 
+                                        placeholder="اكتب محتوى المقال بالعربي..."
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -235,7 +263,7 @@ const ArticlesTab: React.FC<ArticlesTabProps> = ({ articles, categories, authors
                                 <h5 className="font-bold text-med-tech-blue mb-4 uppercase text-xs tracking-wider">{t({ar: 'التصنيف', en: 'Classification'})}</h5>
                                 <div className="mb-4">
                                     <label className={labelClass}>{t({ar: 'الفئة', en: 'Category'})}</label>
-                                    <select className={inputClass} value={articleData.category_id || ''} onChange={e => setArticleData({...articleData, category_id: Number(e.target.value)})}>
+                                    <select className={inputClass} value={articleData.category_id || ''} onChange={e => setArticleData(prev => ({...prev, category_id: Number(e.target.value)}))}>
                                         <option value="">{t({ar: 'اختر الفئة', en: 'Select Category'})}</option>
                                         {categories.map(c => <option key={c.id} value={c.id}>{c.name_en}</option>)}
                                     </select>
@@ -399,10 +427,26 @@ const ArticlesTab: React.FC<ArticlesTabProps> = ({ articles, categories, authors
                     </tbody>
                 </table>
                 {lastPage > 1 && (
-                    <div className="flex justify-between items-center p-4 bg-gray-50 border-t border-gray-200">
-                        <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 border rounded bg-white disabled:opacity-50">{t({ar: 'السابق', en: 'Prev'})}</button>
-                        <span>{t({ar: 'صفحة', en: 'Page'})} {currentPage} {t({ar: 'من', en: 'of'})} {lastPage}</span>
-                        <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === lastPage} className="px-4 py-2 border rounded bg-white disabled:opacity-50">{t({ar: 'التالي', en: 'Next'})}</button>
+                    <div className="flex justify-between items-center p-6 bg-white border-t border-gray-200 shadow-inner">
+                        <button 
+                            onClick={() => onPageChange(currentPage - 1)} 
+                            disabled={currentPage === 1} 
+                            className="px-6 py-2 border-2 border-med-tech-blue text-med-tech-blue rounded-xl font-black hover:bg-med-tech-blue hover:text-white transition-all disabled:opacity-30 disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-transparent"
+                        >
+                            {t({ar: 'السابق', en: 'Previous'})}
+                        </button>
+                        <div className="flex items-center gap-2 font-black text-gray-500 text-sm uppercase tracking-widest">
+                            <span>{t({ar: 'صفحة', en: 'Page'})}</span>
+                            <span className="w-8 h-8 flex items-center justify-center bg-med-tech-blue text-white rounded-lg shadow-md">{currentPage}</span>
+                            <span>{t({ar: 'من', en: 'of'})} {lastPage}</span>
+                        </div>
+                        <button 
+                            onClick={() => onPageChange(currentPage + 1)} 
+                            disabled={currentPage === lastPage} 
+                            className="px-6 py-2 border-2 border-med-tech-blue text-med-tech-blue rounded-xl font-black hover:bg-med-tech-blue hover:text-white transition-all disabled:opacity-30 disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-transparent"
+                        >
+                            {t({ar: 'التالي', en: 'Next'})}
+                        </button>
                     </div>
                 )}
             </div>

@@ -1,8 +1,10 @@
+
 import React from 'react';
-import type { NavigateFunction, LocalizedString } from '../types';
+import type { NavigateFunction } from '../types';
 import { useLocalization } from '../hooks/useLocalization';
 import { FOUNDER_DATA_DETAILED } from '../constants';
 import SEO from '../components/SEO';
+import { api } from '../services/api';
 
 interface FounderPageProps {
   navigate: NavigateFunction;
@@ -12,10 +14,10 @@ const SectionWrapper: React.FC<{ title: string; children: React.ReactNode; icon?
   return (
     <section className={`mb-12 ${className}`}>
       <h2 className="text-2xl md:text-3xl font-bold text-med-blue mb-6 font-arabic flex items-center gap-3 border-b-2 border-gray-100 pb-3">
-        {icon && <span className="text-2xl">{icon}</span>}
+        {icon && <span className="text-2xl" role="img">{icon}</span>}
         <span>{title}</span>
       </h2>
-      <div className="space-y-4 text-gray-700 leading-relaxed prose prose-lg max-w-none">
+      <div className="space-y-4 text-gray-700 leading-relaxed max-w-none">
         {children}
       </div>
     </section>
@@ -24,34 +26,72 @@ const SectionWrapper: React.FC<{ title: string; children: React.ReactNode; icon?
 
 const FounderPage: React.FC<FounderPageProps> = ({ navigate }) => {
   const { t, config, language } = useLocalization();
-  const founder = FOUNDER_DATA_DETAILED;
-
-  const founderName = config?.founder[`name_${language}` as keyof typeof config.founder] || t(founder.name);
-  const founderTitle = config?.founder[`main_title_${language}` as keyof typeof config.founder] || t(founder.mainTitle);
-  const introTitle = config?.founder[`intro_title_${language}` as keyof typeof config.founder] || t(founder.introduction.title);
-  const founderIntro = config?.founder[`intro_${language}` as keyof typeof config.founder] || t(founder.introduction.paragraphs[0]);
-  const quoteText = config?.founder[`quote_${language}` as keyof typeof config.founder] || t(founder.introduction.quote.text);
+  const f = config?.founder;
   
-  const expTitle = config?.founder[`exp_title_${language}` as keyof typeof config.founder] || t(founder.experience.title);
-  const expCurrentTitle = config?.founder[`exp_current_title_${language}` as keyof typeof config.founder] || t(founder.experience.current.title);
-  const academicTitle = config?.founder[`academic_title_${language}` as keyof typeof config.founder] || t(founder.academicRoles.title);
-  const academicSummary = config?.founder[`academic_summary_${language}` as keyof typeof config.founder] || t(founder.academicRoles.summary);
-
-  const profileTitle = config?.founder[`profile_title_${language}` as keyof typeof config.founder] || t(founder.personalProfile.title);
+  const founderName = f?.[`name_${language}` as keyof typeof f] as string || t(FOUNDER_DATA_DETAILED.name);
+  const founderTitle = f?.[`main_title_${language}` as keyof typeof f] as string || t(FOUNDER_DATA_DETAILED.mainTitle);
+  const founderImage = api.resolveImageUrl(f?.main_image, FOUNDER_DATA_DETAILED.image);
   
-  const profileItems = [
-      { label: config?.founder[`profile_item1_label_${language}` as keyof typeof config.founder] || t(founder.personalProfile.items[0].label), value: config?.founder[`profile_item1_val_${language}` as keyof typeof config.founder] || t(founder.personalProfile.items[0].value) },
-      { label: config?.founder[`profile_item2_label_${language}` as keyof typeof config.founder] || t(founder.personalProfile.items[1].label), value: config?.founder[`profile_item2_val_${language}` as keyof typeof config.founder] || t(founder.personalProfile.items[1].value) },
-      { label: config?.founder[`profile_item3_label_${language}` as keyof typeof config.founder] || t(founder.personalProfile.items[2].label), value: config?.founder[`profile_item3_val_${language}` as keyof typeof config.founder] || t(founder.personalProfile.items[2].value) },
-      { label: config?.founder[`profile_item4_label_${language}` as keyof typeof config.founder] || t(founder.personalProfile.items[3].label), value: config?.founder[`profile_item4_val_${language}` as keyof typeof config.founder] || t(founder.personalProfile.items[3].value) },
-  ];
+  const sections = f?.sections || [];
+  const sidebarCards = f?.sidebar_cards || [];
+  const gallery = (f?.gallery || []).map(path => api.resolveImageUrl(path, ''));
+
+  const contactTitle = f?.[`contact_title_${language}` as keyof typeof f] as string || t({ar: 'تواصل مع المؤسس', en: 'Contact the Founder'});
+  const contactContent = f?.[`contact_content_${language}` as keyof typeof f] as string || '';
+
+  // Helper to render content safely (Handles HTML from Quill)
+  const renderSmartContent = (content: string, smallProse: boolean = false) => {
+    if (!content) return null;
+    
+    if (content.trim().startsWith('<')) {
+        return (
+            <div 
+                className={`rich-text-content prose ${smallProse ? 'prose-sm' : 'prose-lg'} max-w-none text-gray-700 leading-relaxed`} 
+                dangerouslySetInnerHTML={{ __html: content }} 
+            />
+        );
+    }
+
+    const lines = content.split('\n');
+    const elements: React.ReactNode[] = [];
+    let currentList: React.ReactNode[] = [];
+
+    const flushList = (key: string) => {
+      if (currentList.length > 0) {
+        elements.push(
+          <ul key={`ul-${key}`} className="list-disc list-inside space-y-1 mb-6 mt-2 marker:text-med-tech-blue pl-4 rtl:pr-4 rtl:pl-0">
+            {currentList}
+          </ul>
+        );
+        currentList = [];
+      }
+    };
+
+    lines.forEach((line, i) => {
+      const trimmedLine = line.trim();
+      if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('• ') || trimmedLine.startsWith('* ')) {
+        const text = trimmedLine.replace(/^[-•*]\s+/, '');
+        currentList.push(<li key={`li-${i}`} className="mb-2 last:mb-0">{text}</li>);
+      } else {
+        flushList(`p-${i}`);
+        if (trimmedLine) {
+          elements.push(<p key={`p-${i}`} className="mb-4 whitespace-pre-line last:mb-0 leading-relaxed">{trimmedLine}</p>);
+        } else {
+            elements.push(<div key={`spacer-${i}`} className="h-4"></div>);
+        }
+      }
+    });
+
+    flushList('final');
+    return elements;
+  };
 
   return (
     <div className="bg-gray-50 font-arabic">
       <SEO page="founder" />
       <section className="bg-med-light-blue pt-12">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center pb-12">
-              <img src={founder.image} alt={founderName} className="w-48 h-48 rounded-full shadow-xl object-cover mx-auto mb-6 border-4 border-white" />
+              <img src={founderImage} alt={founderName} className="w-48 h-48 rounded-full shadow-xl object-cover mx-auto mb-6 border-4 border-white" />
               <h1 className="text-4xl font-bold text-med-blue font-arabic">{founderName}</h1>
               <p className="text-xl text-med-sky mt-2">{founderTitle}</p>
           </div>
@@ -60,46 +100,95 @@ const FounderPage: React.FC<FounderPageProps> = ({ navigate }) => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="lg:grid lg:grid-cols-3 lg:gap-12">
           <main className="lg:col-span-2">
-            <SectionWrapper title={introTitle}>
-              <p>{founderIntro}</p>
-              {founder.introduction.paragraphs.slice(1).map((p, i) => <p key={i}>{t(p)}</p>)}
-              <blockquote className="mt-6 border-r-4 border-med-sky pr-6 rtl:border-r-0 rtl:border-l-4 rtl:pr-0 rtl:pl-6">
-                <p className="text-xl italic text-gray-800">"{quoteText}"</p>
-                <cite className="block text-right mt-2 font-semibold text-med-blue not-italic">{t(founder.introduction.quote.author)}</cite>
-              </blockquote>
-            </SectionWrapper>
+            {sections.map((sec, idx) => (
+                <SectionWrapper key={idx} icon={sec.icon} title={language === 'ar' ? sec.title_ar : sec.title_en}>
+                    {renderSmartContent(language === 'ar' ? sec.content_ar : sec.content_en)}
+                </SectionWrapper>
+            ))}
             
-            <SectionWrapper icon="🏥" title={expTitle}>
-                <h3 className="font-bold text-xl text-gray-800 mb-3">{expCurrentTitle}</h3>
-                <ul className="list-disc pl-6 rtl:pr-6 space-y-2">
-                    {founder.experience.current.items.map((item, i) => <li key={i}>{t(item)}</li>)}
-                </ul>
-            </SectionWrapper>
+            {gallery.length > 0 && (
+                <section className="mb-12">
+                    <h2 className="text-2xl md:text-3xl font-bold text-med-blue mb-6 font-arabic flex items-center gap-3 border-b-2 border-gray-100 pb-3">
+                        <span className="text-2xl" role="img">📷</span>
+                        <span>{t({ar: 'معرض الصور', en: 'Photo Gallery'})}</span>
+                    </h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+                        {gallery.map((imgUrl, idx) => imgUrl && (
+                            <div key={idx} className="aspect-square rounded-2xl overflow-hidden shadow-md bg-white border border-gray-100 group">
+                                <img 
+                                    src={imgUrl} 
+                                    alt={`Gallery image ${idx + 1}`} 
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
-            <SectionWrapper icon="🎓" title={academicTitle}>
-                <p>{t(founder.academicRoles.intro)}</p>
-                <ul className="list-disc pl-6 rtl:pr-6 space-y-2 mt-4">
-                    {founder.academicRoles.courses.map((item, i) => <li key={i}>{t(item)}</li>)}
-                </ul>
-                <p className="mt-4 font-bold text-med-blue">{academicSummary}</p>
-            </SectionWrapper>
+            {/* CONTACT FOUNDER SECTION */}
+            {(contactTitle || contactContent) && (
+                <section className="mb-12 pt-8 border-t border-gray-200">
+                    <h2 className="text-2xl md:text-3xl font-bold text-med-blue mb-6 font-arabic flex items-center gap-3">
+                        <span className="text-2xl" role="img">📩</span>
+                        <span>{contactTitle}</span>
+                    </h2>
+                    <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100">
+                        {renderSmartContent(contactContent)}
+                        <div className="mt-8">
+                            <button 
+                                onClick={() => navigate('contact')}
+                                className="bg-med-tech-blue hover:bg-blue-800 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-md transform hover:-translate-y-1 active:scale-95"
+                            >
+                                {t({ar: 'اتصل بنا', en: 'Contact Us'})}
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {sections.length === 0 && gallery.length === 0 && !contactTitle && (
+                <div className="text-center py-20 text-gray-400 italic">
+                    {t({ ar: 'لا توجد أقسام مضافة بعد.', en: 'No sections added yet.' })}
+                </div>
+            )}
           </main>
 
           <aside className="lg:col-span-1 space-y-8">
-              <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
-                  <h3 className="text-xl font-bold text-med-blue mb-6 border-b pb-4">{profileTitle}</h3>
-                  <div className="space-y-4 text-start rtl:text-right">
-                      {profileItems.map((item, i) => (
-                          <div key={i}>
-                            <strong className="text-gray-900 block text-sm uppercase">{item.label}</strong>
-                            <p className="text-gray-600">{item.value}</p>
-                          </div>
-                      ))}
+              {sidebarCards.map((card, idx) => (
+                  <div key={idx} className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 transition-all hover:shadow-xl">
+                      <h3 className="text-xl font-bold text-med-blue mb-6 border-b pb-4">{language === 'ar' ? card.title_ar : card.title_en}</h3>
+                      <div className="text-start rtl:text-right">
+                          {((card as any)[`content_${language}`]) ? (
+                               renderSmartContent((card as any)[`content_${language}`], true)
+                          ) : (
+                              <div className="space-y-5">
+                                  {card.items.map((item, i) => (
+                                      <div key={i} className="group">
+                                        <strong className="text-gray-400 block text-[10px] uppercase tracking-widest mb-1 font-bold group-hover:text-med-tech-blue transition-colors">
+                                            {language === 'ar' ? item.label_ar : item.label_en}
+                                        </strong>
+                                        <p className="text-gray-800 font-semibold text-lg leading-snug">
+                                            {language === 'ar' ? item.value_ar : item.value_en}
+                                        </p>
+                                      </div>
+                                  ))}
+                              </div>
+                          )}
+                      </div>
                   </div>
-              </div>
+              ))}
           </aside>
         </div>
       </div>
+      <style>{`
+        .rich-text-content h2 { font-size: 1.5rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; color: #1463be; }
+        .rich-text-content h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; }
+        .rich-text-content ul { list-style-type: none; padding-inline-start: 0.5rem; margin-bottom: 1.5rem; }
+        .rich-text-content li { margin-bottom: 0.75rem; position: relative; padding-inline-start: 0.5rem; }
+        .rich-text-content a { color: #1463be; text-decoration: underline; }
+        [dir="rtl"] .rich-text-content ul { padding-inline-start: 0; padding-inline-end: 0.5rem; }
+      `}</style>
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { api } from '../services/api';
 import type { NavigateFunction, ContactFormSubmission, Role, ApiArticle, Category, ApiAuthor, ApiEvent, ApiExpert, User, LocalizedString } from '../types';
 
 // Import Tab Components
+import DashboardTab from '../components/admin/DashboardTab';
 import SettingsTab from '../components/admin/SettingsTab';
 import FrontSettingsTab from '../components/admin/FrontSettingsTab';
 import ContactTab from '../components/admin/ContactTab';
@@ -20,7 +21,7 @@ interface AdminPageProps {
   navigate: NavigateFunction;
 }
 
-type AdminTab = 'settings' | 'contact' | 'articles' | 'categories' | 'authors' | 'experts' | 'events' | 'front_settings' | 'users';
+type AdminTab = 'dashboard' | 'settings' | 'contact' | 'articles' | 'categories' | 'authors' | 'experts' | 'events' | 'front_settings' | 'users';
 
 const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
     <button
@@ -33,25 +34,28 @@ const TabButton: React.FC<{ active: boolean; onClick: () => void; children: Reac
     </button>
 );
 
-// Helper to extract array from various API response structures
 const getArrayFromResponse = (response: any): any[] => {
     if (!response) return [];
-    
-    // Handle nested array response [[...]]
     if (Array.isArray(response)) {
-        if (response.length > 0 && Array.isArray(response[0])) {
-            return response[0];
-        }
+        if (response.length > 0 && Array.isArray(response[0])) return response[0];
         return response;
     }
-
     if (Array.isArray(response.data)) return response.data;
     if (response.data && Array.isArray(response.data.data)) return response.data.data;
     if (response.users && Array.isArray(response.users)) return response.users; 
     return [];
 };
 
+const getTotalFromResponse = (response: any): number => {
+    if (!response) return 0;
+    if (typeof response.total === 'number') return response.total;
+    if (response.data && typeof response.data.total === 'number') return response.data.total;
+    if (response.meta && typeof response.meta.total === 'number') return response.meta.total;
+    return getArrayFromResponse(response).length;
+};
+
 const TAB_LABELS: Record<AdminTab, LocalizedString> = {
+    dashboard: { ar: 'لوحة الإحصائيات', en: 'Dashboard' },
     settings: { ar: 'الإعدادات العامة', en: 'General Settings' },
     front_settings: { ar: 'إعدادات الواجهة', en: 'Front Settings' },
     contact: { ar: 'طلبات التواصل', en: 'Contact Requests' },
@@ -59,16 +63,16 @@ const TAB_LABELS: Record<AdminTab, LocalizedString> = {
     categories: { ar: 'التصنيفات', en: 'Categories' },
     authors: { ar: 'المؤلفون', en: 'Authors' },
     experts: { ar: 'الخبراء', en: 'Experts' },
-    events: { ar: 'الفعاليات', en: 'Events' },
+    events: { ar: 'المؤتمرات', en: 'Conferences' },
     users: { ar: 'المستخدمون', en: 'Users' },
 };
 
-const ORDERED_TABS: AdminTab[] = ['settings', 'front_settings', 'contact', 'articles', 'categories', 'authors', 'experts', 'events', 'users'];
+const ORDERED_TABS: AdminTab[] = ['dashboard', 'settings', 'front_settings', 'contact', 'articles', 'categories', 'authors', 'experts', 'events', 'users'];
 
 const AdminPage: React.FC<AdminPageProps> = ({ navigate }) => {
     const { t, dir } = useLocalization();
     const { showToast } = useToast();
-    const [activeTab, setActiveTab] = useState<AdminTab>('experts');
+    const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
     const [loading, setLoading] = useState(false);
     
     const [contactForms, setContactForms] = useState<ContactFormSubmission[]>([]);
@@ -80,36 +84,48 @@ const AdminPage: React.FC<AdminPageProps> = ({ navigate }) => {
     const [experts, setExperts] = useState<ApiExpert[]>([]);
     const [events, setEvents] = useState<ApiEvent[]>([]);
 
-    // Pagination State
+    const [dashboardTotals, setDashboardTotals] = useState({ events: 0, articles: 0, experts: 0, authors: 0 });
+
     const [currentArticlesPage, setCurrentArticlesPage] = useState(1);
     const [lastArticlesPage, setLastArticlesPage] = useState(1);
     const [currentEventsPage, setCurrentEventsPage] = useState(1);
     const [lastEventsPage, setLastEventsPage] = useState(1);
+    const [currentExpertsPage, setCurrentExpertsPage] = useState(1);
+    const [lastExpertsPage, setLastExpertsPage] = useState(1);
     
     useEffect(() => {
         loadTabData(activeTab);
     }, [activeTab]);
 
-    const loadTabData = async (tab: AdminTab, page: number = 1) => {
-        setLoading(true);
+    const loadTabData = async (tab: AdminTab, page: number = 1, silent: boolean = false) => {
+        if (!silent) setLoading(true);
         try {
             switch (tab) {
+                case 'dashboard':
+                    const [resEvts, resArts, resAuths, resExps, resCats] = await Promise.all([
+                        api.getEvents(1), api.getArticles(1), api.getAuthors(), api.getExperts(1), api.getCategories()
+                    ]);
+                    setEvents(getArrayFromResponse(resEvts));
+                    setArticles(getArrayFromResponse(resArts));
+                    setAuthors(getArrayFromResponse(resAuths));
+                    setExperts(getArrayFromResponse(resExps));
+                    setCategories(getArrayFromResponse(resCats));
+                    setDashboardTotals({
+                        events: getTotalFromResponse(resEvts),
+                        articles: getTotalFromResponse(resArts),
+                        experts: getTotalFromResponse(resExps),
+                        authors: getArrayFromResponse(resAuths).length
+                    });
+                    break;
                 case 'contact':
-                    const contactRes = await api.getContactForms(1); // Fetch page 1 for now
+                    const contactRes = await api.getContactForms(page); 
                     setContactForms(getArrayFromResponse(contactRes));
                     break;
                 case 'articles':
                     const artRes = await api.getArticles(page);
                     setArticles(getArrayFromResponse(artRes));
-                    
-                    let totalPages = 1;
-                    if (artRes.last_page) totalPages = artRes.last_page;
-                    else if (artRes.data && artRes.data.last_page) totalPages = artRes.data.last_page;
-                    else if (artRes.meta && artRes.meta.last_page) totalPages = artRes.meta.last_page;
-                    
-                    setLastArticlesPage(totalPages || 1);
+                    setLastArticlesPage((artRes.last_page || (artRes.data && artRes.data.last_page) || (artRes.meta && artRes.meta.last_page)) || 1);
                     setCurrentArticlesPage(page);
-
                     await Promise.all([
                         api.getCategories().then(res => setCategories(getArrayFromResponse(res))),
                         api.getAuthors().then(res => setAuthors(getArrayFromResponse(res)))
@@ -124,39 +140,42 @@ const AdminPage: React.FC<AdminPageProps> = ({ navigate }) => {
                     setAuthors(getArrayFromResponse(authRes));
                     break;
                 case 'experts':
-                    const expertsRes = await api.getExperts();
+                    const expertsRes = await api.getExperts(page);
                     setExperts(getArrayFromResponse(expertsRes));
+                    setLastExpertsPage((expertsRes.last_page || (expertsRes.data && expertsRes.data.last_page) || (expertsRes.meta && expertsRes.meta.last_page)) || 1);
+                    setCurrentExpertsPage(page);
+                    const eRes = await api.getEvents(1);
+                    setEvents(getArrayFromResponse(eRes));
                     break;
                 case 'events':
                     const evtRes = await api.getEvents(page);
                     setEvents(getArrayFromResponse(evtRes));
-                    
-                    let totalEvtPages = 1;
-                    if (evtRes.last_page) totalEvtPages = evtRes.last_page;
-                    else if (evtRes.data && evtRes.data.last_page) totalEvtPages = evtRes.data.last_page;
-                    else if (evtRes.meta && evtRes.meta.last_page) totalEvtPages = evtRes.meta.last_page;
-
-                    setLastEventsPage(totalEvtPages || 1);
+                    setLastEventsPage((evtRes.last_page || (evtRes.data && evtRes.data.last_page) || (evtRes.meta && evtRes.meta.last_page)) || 1);
                     setCurrentEventsPage(page);
-                    
-                    // Fetch authors for attachment dropdown
-                    const authorsRes = await api.getAuthors();
-                    setAuthors(getArrayFromResponse(authorsRes));
+                    const aRes = await api.getAuthors();
+                    setAuthors(getArrayFromResponse(aRes));
                     break;
                 case 'users':
-                    const rolesRes = await api.getRoles();
-                    setRoles(getArrayFromResponse(rolesRes));
-                    const usersRes = await api.getUsers();
-                    setUsersList(getArrayFromResponse(usersRes));
+                    const [rRes, uRes] = await Promise.all([api.getRoles(), api.getUsers()]);
+                    setRoles(getArrayFromResponse(rRes));
+                    setUsersList(getArrayFromResponse(uRes));
                     break;
             }
         } catch (error) {
             console.error(error);
             showToast(t({ar: 'فشل تحميل البيانات', en: 'Failed to load data'}), 'error');
-            setExperts([]); setArticles([]); setEvents([]);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
+    };
+
+    // Helper to determine if we should show the full-page loading spinner
+    const isTabEmpty = () => {
+        if (activeTab === 'contact') return contactForms.length === 0;
+        if (activeTab === 'articles') return articles.length === 0;
+        if (activeTab === 'events') return events.length === 0;
+        if (activeTab === 'experts') return experts.length === 0;
+        return true;
     };
 
     return (
@@ -174,32 +193,36 @@ const AdminPage: React.FC<AdminPageProps> = ({ navigate }) => {
             </aside>
             <main className="flex-1 p-4 md:p-8 overflow-y-auto">
                 <div className="max-w-7xl mx-auto">
-                    {loading && activeTab !== 'experts' && activeTab !== 'settings' && activeTab !== 'front_settings' ? 
+                    {/* CRITICAL FIX: Only show loading div if we don't have data yet. 
+                        If we are refreshing (silent), we keep the current UI mounted so Modals don't close. */}
+                    {loading && isTabEmpty() && activeTab !== 'dashboard' && activeTab !== 'settings' && activeTab !== 'front_settings' ? 
                         <div className="text-center py-20 text-gray-500">{t({ar: 'جارٍ تحميل البيانات...', en: 'Loading data...'})}</div> 
                     : (
                         <>
+                            {activeTab === 'dashboard' && <DashboardTab 
+                                events={events} articles={articles} authors={authors} experts={experts} 
+                                categories={categories} totals={dashboardTotals} loading={loading}
+                            />}
                             {activeTab === 'settings' && <SettingsTab />}
                             {activeTab === 'front_settings' && <FrontSettingsTab />}
-                            {activeTab === 'contact' && <ContactTab contactForms={contactForms} />}
+                            {activeTab === 'contact' && <ContactTab contactForms={contactForms} onRefresh={(silent) => loadTabData('contact', 1, silent)} />}
                             {activeTab === 'articles' && <ArticlesTab 
-                                articles={articles} 
-                                categories={categories} 
-                                authors={authors} 
-                                currentPage={currentArticlesPage}
-                                lastPage={lastArticlesPage}
+                                articles={articles} categories={categories} authors={authors} 
+                                currentPage={currentArticlesPage} lastPage={lastArticlesPage}
                                 onPageChange={(p) => loadTabData('articles', p)}
-                                onRefresh={() => loadTabData('articles', currentArticlesPage)}
+                                onRefresh={() => loadTabData('articles', currentArticlesPage, true)}
                             />}
-                            {activeTab === 'categories' && <CategoriesTab categories={categories} onRefresh={() => loadTabData('categories')} />}
-                            {activeTab === 'authors' && <AuthorsTab authors={authors} onRefresh={() => loadTabData('authors')} />}
-                            {activeTab === 'experts' && <ExpertsTab experts={experts} onRefresh={() => loadTabData('experts')} />}
+                            {activeTab === 'categories' && <CategoriesTab categories={categories} onRefresh={() => loadTabData('categories', 1, true)} />}
+                            {activeTab === 'authors' && <AuthorsTab authors={authors} onRefresh={() => loadTabData('authors', 1, true)} />}
+                            {activeTab === 'experts' && <ExpertsTab 
+                                experts={experts} events={events} currentPage={currentExpertsPage} lastPage={lastExpertsPage}
+                                onPageChange={(p) => loadTabData('experts', p)}
+                                onRefresh={() => loadTabData('experts', currentExpertsPage, true)} 
+                            />}
                             {activeTab === 'events' && <EventsTab 
-                                events={events}
-                                authors={authors}
-                                currentPage={currentEventsPage}
-                                lastPage={lastEventsPage}
+                                events={events} authors={authors} currentPage={currentEventsPage} lastPage={lastEventsPage}
                                 onPageChange={(p) => loadTabData('events', p)}
-                                onRefresh={() => loadTabData('events', currentEventsPage)}
+                                onRefresh={() => loadTabData('events', currentEventsPage, true)}
                             />}
                             {activeTab === 'users' && <UsersTab usersList={usersList} />}
                         </>

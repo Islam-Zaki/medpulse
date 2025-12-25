@@ -16,9 +16,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate, handleLogin }) => {
   const { showToast } = useToast();
   const c = LOGIN_PAGE_CONTENT;
 
+  // Login form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Forget Password state
+  const [showForgetModal, setShowForgetModal] = useState(false);
+  const [forgetStep, setForgetStep] = useState<1 | 2>(1); // 1: Email, 2: Token/Reset
+  const [forgetEmail, setForgetEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +65,38 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate, handleLogin }) => {
         console.error(err);
     } finally {
         setLoading(false);
+    }
+  };
+
+  const handleForgetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+    try {
+        await api.forgetPassword(forgetEmail);
+        showToast(t({ar: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني', en: 'Reset token sent to your email'}), 'success');
+        setForgetStep(2);
+    } catch (err) {
+        showToast(t({ar: 'فشل إرسال الطلب. تأكد من صحة البريد الإلكتروني.', en: 'Failed to send request. Ensure email is correct.'}), 'error');
+    } finally {
+        setResetLoading(false);
+    }
+  };
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+    try {
+        await api.resetPassword(forgetEmail, resetToken, resetPassword);
+        showToast(t({ar: 'تم إعادة تعيين كلمة المرور بنجاح. يمكنك تسجيل الدخول الآن.', en: 'Password reset successfully. You can log in now.'}), 'success');
+        setShowForgetModal(false);
+        setForgetStep(1);
+        setForgetEmail('');
+        setResetToken('');
+        setResetPassword('');
+    } catch (err) {
+        showToast(t({ar: 'فشل إعادة تعيين كلمة المرور. الرمز قد يكون غير صالح.', en: 'Password reset failed. Token might be invalid.'}), 'error');
+    } finally {
+        setResetLoading(false);
     }
   };
 
@@ -103,7 +144,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate, handleLogin }) => {
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">{t(c.checkbox)}</label>
             </div>
             <div className="text-sm">
-              <a href="#" className="font-medium text-med-sky hover:text-med-blue">{t(c.forgotPasswordLink)}</a>
+              <button 
+                type="button" 
+                onClick={() => { setShowForgetModal(true); setForgetStep(1); }}
+                className="font-medium text-med-sky hover:text-med-blue"
+              >
+                {t(c.forgotPasswordLink)}
+              </button>
             </div>
           </div>
 
@@ -123,6 +170,128 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate, handleLogin }) => {
             </button>
         </div>
       </div>
+
+      {/* Forget Password Modal */}
+      {showForgetModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-up">
+                  <div className="bg-med-tech-blue p-6 text-white flex justify-between items-center">
+                      <h3 className="text-xl font-bold font-arabic">
+                        {forgetStep === 1 
+                            ? t({ar: 'نسيت كلمة المرور؟', en: 'Forgot Password?'}) 
+                            : t({ar: 'تعيين كلمة مرور جديدة', en: 'Reset New Password'})
+                        }
+                      </h3>
+                      <button onClick={() => setShowForgetModal(false)} className="text-white/80 hover:text-white text-2xl font-bold">&times;</button>
+                  </div>
+                  
+                  <div className="p-8">
+                      {forgetStep === 1 ? (
+                          <form onSubmit={handleForgetSubmit} className="space-y-6">
+                              <p className="text-gray-600 text-sm leading-relaxed">
+                                  {t({
+                                      ar: 'أدخل بريدك الإلكتروني المسجل وسنرسل لك رمزاً لإعادة تعيين كلمة المرور.',
+                                      en: 'Enter your registered email and we will send you a reset token.'
+                                  })}
+                              </p>
+                              <div>
+                                  <label className="block text-sm font-bold text-gray-700 mb-2">{t({ar: 'البريد الإلكتروني', en: 'Email Address'})}</label>
+                                  <input 
+                                      type="email" 
+                                      required 
+                                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-med-tech-blue outline-none bg-gray-50"
+                                      placeholder="example@mail.com"
+                                      value={forgetEmail}
+                                      onChange={e => setForgetEmail(e.target.value)}
+                                  />
+                              </div>
+                              <button 
+                                  type="submit" 
+                                  disabled={resetLoading}
+                                  className="w-full bg-med-tech-blue text-white py-3 rounded-xl font-bold hover:bg-blue-800 transition-all shadow-md flex items-center justify-center gap-2"
+                              >
+                                  {resetLoading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
+                                  {t({ar: 'إرسال الطلب', en: 'Send Request'})}
+                              </button>
+                          </form>
+                      ) : (
+                          <form onSubmit={handleResetSubmit} className="space-y-5">
+                              <p className="text-gray-600 text-sm bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                  {t({
+                                      ar: 'يرجى إدخال الرمز المرسل إلى بريدك مع كلمة المرور الجديدة.',
+                                      en: 'Please enter the token sent to your email along with your new password.'
+                                  })}
+                              </p>
+                              <div>
+                                  <label className="block text-sm font-bold text-gray-700 mb-1">{t({ar: 'البريد الإلكتروني', en: 'Email Address'})}</label>
+                                  <input 
+                                      type="email" 
+                                      required 
+                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-med-tech-blue outline-none bg-gray-100"
+                                      value={forgetEmail}
+                                      readOnly
+                                  />
+                              </div>
+                              <div>
+                                  <label className="block text-sm font-bold text-gray-700 mb-1">{t({ar: 'الرمز (Token)', en: 'Token'})}</label>
+                                  <input 
+                                      type="text" 
+                                      required 
+                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-med-tech-blue outline-none bg-gray-50"
+                                      placeholder="e.g. LHMy8"
+                                      value={resetToken}
+                                      onChange={e => setResetToken(e.target.value)}
+                                  />
+                              </div>
+                              <div>
+                                  <label className="block text-sm font-bold text-gray-700 mb-1">{t({ar: 'كلمة المرور الجديدة', en: 'New Password'})}</label>
+                                  <input 
+                                      type="password" 
+                                      required 
+                                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-med-tech-blue outline-none bg-gray-50"
+                                      placeholder="********"
+                                      value={resetPassword}
+                                      onChange={e => setResetPassword(e.target.value)}
+                                  />
+                              </div>
+                              <button 
+                                  type="submit" 
+                                  disabled={resetLoading}
+                                  className="w-full bg-med-vital-green text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-all shadow-md flex items-center justify-center gap-2 mt-4"
+                              >
+                                  {resetLoading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
+                                  {t({ar: 'تأكيد إعادة التعيين', en: 'Confirm Reset'})}
+                              </button>
+                              <button 
+                                type="button" 
+                                onClick={() => setForgetStep(1)}
+                                className="w-full text-sm text-gray-500 hover:text-med-tech-blue transition-colors mt-2 font-medium"
+                              >
+                                  {t({ar: 'رجوع إلى البريد الإلكتروني', en: 'Back to Email'})}
+                              </button>
+                          </form>
+                      )}
+                  </div>
+              </div>
+          </div>
+      )}
+
+      <style>{`
+        @keyframes scale-up {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-up {
+            animation: scale-up 0.3s ease-out forwards;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };

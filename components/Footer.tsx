@@ -1,14 +1,37 @@
+
 import React from 'react';
 import { useLocalization } from '../hooks/useLocalization';
 import { NAV_LINKS, FOOTER_POLICY_LINKS, SOCIAL_LINKS } from '../constants';
 import type { NavigateFunction } from '../types';
+import { api } from '../services/api';
 
 interface FooterProps {
     navigate: NavigateFunction;
 }
 
+const DEFAULT_LOGO = "https://storage.googleapis.com/aistudio-v2-dev-0-user-b30432c0-ff27-4f91-a18c-864b4c3e8a5a/4b5b4819-ff16-419b-b0b8-cdd21f66d498.png";
+
 const Footer: React.FC<FooterProps> = ({ navigate }) => {
-    const { t } = useLocalization();
+    const { t, config } = useLocalization();
+
+    const logoUrl = api.resolveImageUrl((config?.home as any)?.logo, DEFAULT_LOGO);
+
+    // Map platforms to their hardcoded icons in SOCIAL_LINKS for easy icon reuse
+    const getPlatformIcon = (platformName: string) => {
+        const found = SOCIAL_LINKS.find(l => l.name.toLowerCase() === platformName.toLowerCase());
+        return found ? found.icon : null;
+    };
+
+    // Use dynamic links if they exist in config, otherwise fallback to constants
+    const socialLinks = config?.home?.social_links ? 
+        Object.entries(config.home.social_links)
+            .filter(([_, url]) => !!url && typeof url === 'string')
+            .map(([name, url]) => ({
+                name: name.charAt(0).toUpperCase() + name.slice(1),
+                url: url as string,
+                icon: getPlatformIcon(name)
+            })) 
+        : SOCIAL_LINKS;
 
     return (
         <footer className="bg-sterile-light-grey text-clinical-charcoal border-t border-gray-300">
@@ -16,7 +39,7 @@ const Footer: React.FC<FooterProps> = ({ navigate }) => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="md:col-span-2 space-y-4">
                          <button onClick={() => navigate('home')} className="flex items-center gap-2">
-                            <img src="https://storage.googleapis.com/aistudio-v2-dev-0-user-b30432c0-ff27-4f91-a18c-864b4c3e8a5a/4b5b4819-ff16-419b-b0b8-cdd21f66d498.png" alt="MedPulse Logo" className="h-14" />
+                            <img src={logoUrl} alt="MedPulse Logo" className="h-14" />
                         </button>
                         <p className="text-sm text-gray-700 max-w-md leading-relaxed">{t({ar: 'منصة علمية-إعلامية متخصصة في تقييم وتحليل المؤتمرات الطبية في الإمارات والشرق الأوسط.', en: 'A media-scientific platform specialized in evaluating and analyzing medical conferences in the UAE and the Middle East.'})}</p>
                     </div>
@@ -35,7 +58,7 @@ const Footer: React.FC<FooterProps> = ({ navigate }) => {
                     <div>
                         <h3 className="font-bold text-lg mb-4 text-clinical-charcoal">{t({ar: 'تواصل معنا', en: 'Follow Us'})}</h3>
                          <div className="flex space-x-4 rtl:space-x-reverse">
-                            {SOCIAL_LINKS.map(link => (
+                            {socialLinks.map(link => (
                                 <a key={link.name} href={link.url} target="_blank" rel="noopener noreferrer" className="text-med-tech-blue hover:text-med-vital-green transition-colors" aria-label={link.name}>
                                     {link.icon}
                                 </a>

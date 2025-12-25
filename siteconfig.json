@@ -1,57 +1,213 @@
+
 {
   "fonts": {
-    "ar": {
-      "headings": "Cairo",
-      "body": "Cairo"
-    },
-    "en": {
-      "headings": "Poppins",
-      "body": "Poppins"
-    }
+    "ar": { "headings": "Cairo", "body": "Cairo" },
+    "en": { "headings": "Poppins", "body": "Poppins" }
   },
   "home": {
+    "seo": {
+      "meta_title_ar": "ميد بلس | نبض الطب - تقييم المؤتمرات الطبية في الإمارات",
+      "meta_title_en": "MedPulse | Nabd Al-Tibb - Medical Conference Evaluation in UAE",
+      "meta_description_ar": "منصة متخصصة في تقييم وتحليل المحتوى العلمي والتنظيمي للمؤتمرات الطبية في دولة الإمارات والشرق الأوسط.",
+      "meta_description_en": "A specialized platform for evaluating and analyzing scientific and organizational content of medical conferences in the UAE and Middle East.",
+      "keywords_ar": "مؤتمرات طبية، تقييم طبي، الإمارات، نبض الطب، دبي، أبوظبي",
+      "keywords_en": "Medical Conferences, Medical Evaluation, UAE, Nabd Al-Tibb, Dubai, Abu Dhabi"
+    },
     "hero_title_ar": "تقييمات علمية لمستقبل الطب",
     "hero_title_en": "Scientific Evaluations for the Future of Medicine",
     "hero_subtitle_ar": "تحليل دقيق، رؤية محايدة",
     "hero_subtitle_en": "Accurate Analysis, Unbiased Vision",
     "hero_desc_ar": "MedPulse هو منصتك الموثوقة لتقييم المؤتمرات والفعاليات الطبية في الشرق الأوسط، بناءً على منهجية علمية صارمة لضمان أعلى معايير الجودة والشفافية.",
     "hero_desc_en": "MedPulse is your trusted platform for evaluating medical conferences and events in the Middle East, based on a rigorous scientific methodology to ensure the highest standards of quality and transparency.",
+    "hero_btn1_ar": "استكشف التقييمات",
+    "hero_btn1_en": "Explore Evaluations",
+    "hero_btn2_ar": "اعرف المزيد عنا",
+    "hero_btn2_en": "Learn More About Us",
     "about_title_ar": "ما هو MedPulse؟",
     "about_title_en": "What is MedPulse?",
     "about_desc_ar": "MedPulse هو مشروع إعلامي–علمي يهدف إلى تقديم تقييمات دقيقة ومحايدة للمؤتمرات الطبية، استنادًا إلى منهجية علمية واضحة، وتحليل احترافي يسلّط الضوء على جودة المحتوى العلمي، التنظيم، المتحدثين، الشركات المشاركة، والأثر المجتمعي.",
     "about_desc_en": "MedPulse is a media-scientific project aimed at providing accurate and unbiased evaluations of medical conferences, based on a clear scientific methodology and professional analysis.",
-    "about_p1_ar": "تقييمات محايدة ومبنية على البيانات",
-    "about_p1_en": "Unbiased, data-driven evaluations",
-    "about_p2_ar": "منهجية علمية شفافة",
-    "about_p2_en": "Transparent scientific methodology",
-    "about_p3_ar": "تغطية إعلامية متكاملة",
-    "about_p3_en": "Comprehensive media coverage",
-    "about_p4_ar": "خبراء في القطاع الطبي والإعلامي",
-    "about_p4_en": "Experts in the medical and media sectors",
+    "about_items": [
+      { "icon": "✔", "text_ar": "تقييمات محايدة ومبنية على البيانات", "text_en": "Unbiased, data-driven evaluations" },
+      { "icon": "✔", "text_ar": "منهجية علمية شفافة", "text_en": "Transparent scientific methodology" },
+      { "icon": "✔", "text_ar": "تغطية إعلامية متكاملة", "text_en": "Comprehensive media coverage" },
+      { "icon": "✔", "text_ar": "خبراء في القطاع الطبي والإعلامي", "text_en": "Experts in the medical and media sectors" }
+    ],
+    "mv_title_ar": "رسالتنا ورؤيتنا",
+    "mv_title_en": "Our Mission & Vision",
+    "mission_icon": "🎯",
+    "mission_title_ar": "مهمتنا",
+    "mission_title_en": "Our Mission",
+    "mission_text_ar": "نقدّم تقييمات مهنية وحيادية للمؤتمرات العلمية بهدف تطوير مستوى التعليم الطبي المستمر.",
+    "mission_text_en": "We provide professional and unbiased evaluations of scientific conferences to develop the level of continuous medical education.",
+    "mission_summary_ar": "رسالتنا باختصار: رفع مستوى الوعي الطبي والإعلامي.",
+    "mission_summary_en": "Our mission in short: To raise the level of medical and media awareness.",
+    "vision_icon": "👁️",
+    "vision_title_ar": "رؤيتنا",
+    "vision_title_en": "Our Vision",
+    "vision_text_ar": "أن نكون المرجع الأهم لتقييم الفعاليات الطبية في الشرق الأوسط.",
+    "vision_text_en": "To be the most important reference for evaluating medical events in the Middle East.",
+    "vision_summary_ar": "رؤيتنا تنطلق من قناعة أن التقييم الموضوعي هو الخطوة الأولى نحو التطوير.",
+    "vision_summary_en": "Our vision stems from the conviction that objective evaluation is the first step towards development.",
+    "why_title_ar": "لماذا MedPulse؟",
+    "why_title_en": "Why MedPulse?",
+    "why_desc_ar": "نحن نجمع بين الخبرة العلمية والقدرة الإعلامية لتقديم قيمة فريدة.",
+    "why_desc_en": "We combine scientific expertise and media capability to deliver unique value.",
+    "why_items": [
+      { "icon": "🧠", "title_ar": "التخصص العلمي الحقيقي", "title_en": "True Scientific Specialization", "desc_ar": "يضم فريقنا أطباء واستشاريين متخصصين يراجعون المحتوى العلمي بدقة.", "desc_en": "Our team includes specialized doctors and consultants who meticulously review scientific content." },
+      { "icon": "⚖️", "title_ar": "الحياد والشفافية", "title_en": "Neutrality and Transparency", "desc_ar": "نلتزم بالموضوعية المطلقة في جميع التقييمات، دون انحياز لأي جهة.", "desc_en": "We are committed to absolute objectivity in all evaluations, without bias towards any party." },
+      { "icon": "📋", "title_ar": "نظام تقييم دقيق", "title_en": "Precise Evaluation System", "desc_ar": "نطبق آلية تقييم مبنية على خمس محاور علمية تضمن تقييماً شاملاً.", "desc_en": "We apply an evaluation mechanism based on five scientific pillars to ensure a comprehensive assessment." },
+      { "icon": "🎥", "title_ar": "محتوى متنوع ومصداقية", "title_en": "Diverse and Credible Content", "desc_ar": "نوفر تقارير ومقالات ومقابلات مصورة لتوثيق الحدث من جميع الزوايا.", "desc_en": "We provide reports, articles, and video interviews to document the event from all angles." },
+      { "icon": "🌍", "title_ar": "تأثير إعلامي واسع", "title_en": "Broad Media Impact", "desc_ar": "تصل تغطياتنا إلى آلاف المتخصصين، مما يجعلنا أداة مؤثرة في القطاع.", "desc_en": "Our coverage reaches thousands of specialists, making us an influential tool in the sector." }
+    ],
+    "how_title_ar": "كيف نقوم بالتقييم؟",
+    "how_title_en": "How We Evaluate?",
+    "how_desc_ar": "منهجيتنا تضمن الدقة والموضوعية في كل خطوة.",
+    "how_desc_en": "Our methodology ensures accuracy and objectivity at every step.",
+    "how_steps": [
+      { "title_ar": "الرصد الميداني", "title_en": "Field Observation", "desc_ar": "حضور فعلي لفعاليات المؤتمر وجلساته العلمية.", "desc_en": "Actual attendance at conference events and scientific sessions." },
+      { "title_ar": "التوثيق", "title_en": "Documentation", "desc_ar": "تصوير احترافي يشمل لقطات من القاعات والمعارض والمقابلات.", "desc_en": "Professional photography and videography covering halls, exhibitions, and interviews." },
+      { "title_ar": "التحليل", "title_en": "Analysis", "desc_ar": "مراجعة المحتوى العلمي والمناقشات والأبحاث المقدمة.", "desc_en": "Review of scientific content, discussions, and presented research." },
+      { "title_ar": "التقييم", "title_en": "Evaluation", "desc_ar": "احتساب الدرجات بناءً على محاور التقييم الخمسة.", "desc_en": "Calculating scores based on the five evaluation pillars." },
+      { "title_ar": "النشر", "title_en": "Publication", "desc_ar": "عرض النتيجة في تقرير شامل على الموقع والمنصات الإعلامية.", "desc_en": "Presenting the results in a comprehensive report on the website and media platforms." }
+    ],
+    "how_goal_ar": "هدفنا ليس النقد، بل التطوير المستمر للقطاع الطبي في الإمارات.",
+    "how_goal_en": "Our goal is not criticism, but the continuous development of the medical sector in the UAE.",
+    "latest_conf_title_ar": "أحدث تقييمات المؤتمرات",
+    "latest_conf_title_en": "Latest Conference Evaluations",
+    "latest_art_title_ar": "أحدث المقالات والتحليلات",
+    "latest_art_title_en": "Latest Articles & Analyses",
     "founder_sec_title_ar": "مؤسس MedPulse",
     "founder_sec_title_en": "Founder of MedPulse",
     "founder_sec_desc_ar": "بإيمانه العميق بأن التقييم العلمي الشفاف هو أساس التقدم، أطلق الدكتور خالد العطوي فكرة MedPulse لتكون منصة حقيقية تواكب نمو القطاع الطبي في الإمارات وتدعمه بالمعرفة والتطوير.",
-    "founder_sec_desc_en": "With a deep belief that transparent scientific evaluation is the foundation of progress, Dr. Khaled Al-Atawi launched MedPulse."
+    "founder_sec_desc_en": "With a deep belief that transparent scientific evaluation is the foundation of progress, Dr. Khaled Al-Atawi launched MedPulse.",
+    "cta_title_ar": "تواصل معنا",
+    "cta_title_en": "Contact Us",
+    "cta_desc_ar": "إذا كنت منظمًا لمؤتمر طبي أو شركة راعية، يمكنك التعاون معنا لتوثيق وتقييم فعاليتك القادمة.",
+    "cta_desc_en": "If you are a medical conference organizer or sponsor, you can collaborate with us to document and evaluate your next event.",
+    "cta_btn_ar": "تواصل معنا الآن",
+    "cta_btn_en": "Contact Us Now",
+    "social_links": {
+      "facebook": "https://www.facebook.com/MedPulseUAE/",
+      "instagram": "https://www.instagram.com/medpulseuae/",
+      "x": "https://x.com/medpulseuae",
+      "tiktok": "https://www.tiktok.com/@medpulseuae",
+      "youtube": "https://www.youtube.com/@medpulse-u3z"
+    }
   },
   "about": {
+    "seo": {
+      "meta_title_ar": "عن ميد بلس - المنصة الأولى لتقييم المؤتمرات",
+      "meta_title_en": "About MedPulse - The First Platform for Conference Evaluation",
+      "meta_description_ar": "تعرف على رسالة ورؤية MedPulse وفريق الخبراء المتخصص في تحليل الفعاليات الطبية.",
+      "meta_description_en": "Learn about MedPulse's mission, vision, and the expert team specialized in medical event analysis.",
+      "keywords_ar": "من نحن، رسالة ميد بلس، رؤية ميد بلس، فريق العمل",
+      "keywords_en": "about us, medpulse mission, medpulse vision, our team"
+    },
     "h1_ar": "عن MedPulse – نبض الطب",
     "h1_en": "About MedPulse",
     "subtitle_ar": "المنصة العلمية–الإعلامية الأولى لتقييم وتحليل المؤتمرات الطبية في الإمارات",
     "subtitle_en": "The First Scientific-Media Platform for Evaluating and Analyzing Medical Conferences in the UAE",
+    "intro_icon": "🩺",
     "intro_title_ar": "مقدمة تعريفية",
     "intro_title_en": "Introduction",
     "intro_p1_ar": "في ظل الطفرة الكبيرة التي تشهدها دولة الإمارات في تنظيم المؤتمرات والفعاليات الطبية والعلمية، برزت الحاجة إلى وجود منصة مستقلة وموثوقة تُقيّم هذه المؤتمرات بشكل علمي واحترافي.",
     "intro_p1_en": "In light of the significant boom the UAE is witnessing in organizing medical and scientific conferences, the need has emerged for an independent and reliable platform.",
     "intro_p2_ar": "من هنا وُلدت فكرة MedPulse – نبض الطب، كأول مشروع يجمع بين العلم والإعلام في منظومة تقييم متكاملة.",
     "intro_p2_en": "From here, the idea of MedPulse was born as the first project combining science and media in an integrated system.",
+    "mission_icon": "🎯",
     "mission_title_ar": "الرسالة (Mission)",
     "mission_title_en": "Mission",
+    "mission_text_ar": "<ul><li>تقديم تقييمات مهنية دقيقة لكل مؤتمر طبي في الإمارات.</li><li>توثيق تجربة الحضور والمنظمين بشكل موضوعي.</li></ul>",
+    "mission_text_en": "<ul><li>Providing accurate professional evaluations for every medical conference.</li><li>Documenting attendee and organizer experience objectively.</li></ul>",
     "mission_summary_ar": "رفع مستوى الوعي الطبي والإعلامي داخل منظومة المؤتمرات والفعاليات العلمية.",
     "mission_summary_en": "To raise the level of medical and media awareness within the system of conferences and scientific events.",
-    "vision_title_ar": "الرؤية (Vision)",
-    "vision_title_en": "Vision",
+    "vision_icon": "👁️",
+    "vision_title_ar": "رؤيتنا",
+    "vision_title_en": "Our Vision",
     "vision_text_ar": "أن تكون MedPulse المرجع الأول لتقييم وتحليل المؤتمرات الطبية في الإمارات والشرق الأوسط.",
     "vision_text_en": "For MedPulse to be the leading reference for evaluating and analyzing medical conferences in the UAE and Middle East.",
+    "vision_summary_ar": "رؤيتنا تنطلق من قناعة أن التقييم الموضوعي هو الخطوة الأولى نحو التطوير.",
+    "vision_summary_en": "Our vision stems from the conviction that objective evaluation is the first step towards development.",
+    "goals_icon": "⚖️",
+    "goals": [
+      {
+        "icon": "🎯",
+        "title_ar": "الارتقاء بجودة المؤتمرات الطبية",
+        "title_en": "Enhancing the Quality of Medical Conferences",
+        "desc_ar": "من خلال تطبيق نظام تقييم احترافي يساعد الجهات المنظمة على معرفة نقاط القوة وفرص التحسين.",
+        "desc_en": "By applying a professional evaluation system that helps organizing bodies identify strengths and opportunities for improvement."
+      },
+      {
+        "icon": "🎓",
+        "title_ar": "تمكين الأطباء والطلبة",
+        "title_en": "Empowering Doctors and Students",
+        "desc_ar": "بتزويدهم بمعلومات دقيقة تساعدهم على اختيار الفعاليات العلمية الأكثر فائدة من الناحية الأكاديمية والمهنية.",
+        "desc_en": "By providing them with accurate information that helps them choose the most beneficial scientific events."
+      }
+    ],
+    "values_icon": "🧠",
+    "core_values_intro_ar": "تُعدّ قيم MedPulse الأساس الذي ترتكز عليه كل تغطية وتقييم، وهي ما يميز المنصة عن أي مبادرة إعلامية أو طبية أخرى:",
+    "core_values_intro_en": "MedPulse's values are the foundation upon which every coverage and evaluation is based, and they are what distinguish the platform:",
+    "values": [
+      {
+        "icon": "💎",
+        "title_ar": "الشفافية",
+        "title_en": "Transparency",
+        "desc_ar": "نؤمن بأن المصداقية تبدأ من الحياد الكامل في تحليل وتقييم كل فعالية، دون أي اعتبارات تجارية.",
+        "desc_en": "We believe that credibility begins with complete neutrality in analyzing and evaluating each event."
+      },
+      {
+        "icon": "🎓",
+        "title_ar": "المهنية",
+        "title_en": "Professionalism",
+        "desc_ar": "نلتزم بأعلى المعايير المهنية في التغطية، من إعداد التقارير إلى التحليل العلمي الموضوعي.",
+        "desc_en": "We adhere to the highest professional standards in coverage, from reporting to objective analysis."
+      }
+    ],
+    "services_icon": "🏥",
+    "services": [
+      {
+        "icon": "📝",
+        "title_ar": "تقييم شامل للمؤتمرات",
+        "title_en": "Comprehensive Conference Evaluation",
+        "desc_ar": "تغطية ميدانية متكاملة لكل فعالية مع إعداد تقرير تقييم رسمي.",
+        "desc_en": "Integrated field coverage for every event with an official evaluation report."
+      }
+    ],
+    "team_icon": "🧩",
+    "team": [
+      {
+        "icon": "👨‍⚕️",
+        "title_ar": "أطباء واستشاريون",
+        "title_en": "Doctors & Consultants",
+        "desc_ar": "متخصصون في مختلف الفروع الطبية لمراجعة المحتوى العلمي.",
+        "desc_en": "Specialized in various medical branches to review scientific content."
+      }
+    ],
+    "diff_icon": "🧾",
+    "differentiators": [
+      {
+        "icon": "🧠",
+        "title_ar": "أول منصة متخصصة",
+        "title_en": "First Specialized Platform",
+        "desc_ar": "الوحيدة في المنطقة التي تجمع بين التقييم العلمي والإعلامي المتخصص.",
+        "desc_en": "The only one in the region combining specialized scientific and media evaluation."
+      }
+    ],
+    "future_vision_icon": "🌍",
+    "future_vision_title_ar": "رؤيتنا المستقبلية",
+    "future_vision_title_en": "Our Future Vision",
+    "future_vision_intro_ar": "تسعى MedPulse إلى التوسع في المستقبل لتشمل:",
+    "future_vision_intro_en": "MedPulse aims to expand in the future to include:",
+    "future_vision": [
+      { "title_ar": "تغطية المؤتمرات الطبية في الخليج والعالم العربي", "title_en": "Covering medical conferences in the Gulf and the Arab world" },
+      { "title_ar": "تطوير نظام رقمي ذكي لتقييم المؤتمرات إلكترونيًا (AI-Driven Evaluation)", "title_en": "Developing a smart digital system for evaluating conferences electronically (AI-Driven Evaluation)" },
+      { "title_ar": "إطلاق أرشيف علمي رقمي يحتوي على تقارير تحليلية قابلة للبحث والاستشهاد الأكاديمي", "title_en": "Launching a digital scientific archive containing analytical reports that are searchable and citable for academic purposes" },
+      { "title_ar": "بناء شبكة تعاون مع الجامعات والمستشفيات لدعم التعليم الطبي المستمر", "title_en": "Building a collaboration network with universities and hospitals to support continuing medical education" }
+    ],
+    "future_vision_summary_ar": "هدفنا أن نصبح المرجع العربي الأول في تقييم الفعاليات العلمية والطبية، وأن نخلق جيلًا جديدًا من المؤتمرات التي تُقاس بجودتها لا بعدد جلساتها.",
+    "future_vision_summary_en": "Our goal is to become the leading Arab reference for evaluating scientific and medical events, and to create a new generation of conferences measured by their quality, not the number of their sessions.",
     "cta_title_ar": "تواصل معنا",
     "cta_title_en": "Contact Us",
     "cta_desc_ar": "إذا كنت منظمًا لمؤتمر طبي أو شركة راعية، يمكنك التعاون معنا لتوثيق وتقييم فعاليتك القادمة.",
@@ -60,74 +216,88 @@
     "cta_btn_en": "Contact Us Now"
   },
   "founder": {
+    "seo": {
+      "meta_title_ar": "الدكتور خالد العطوي - مؤسس ميد بلس",
+      "meta_title_en": "Dr. Khaled Al-Atawi - Founder of MedPulse",
+      "meta_description_ar": "تعرف على المسيرة المهنية والأكاديمية للدكتور خالد العطوي، استشاري طب حديثي الولادة ومؤسس منصة MedPulse.",
+      "meta_description_en": "Learn about the career and academic journey of Dr. Khaled Al-Atawi, Consultant Neonatologist and Founder of MedPulse.",
+      "keywords_ar": "د. خالد العطوي، استشاري طب حديثي الولادة، مؤسس ميد بلس، تعليم طبي",
+      "keywords_en": "Dr. Khaled Al-Atawi, Neonatologist, MedPulse Founder, Medical Education"
+    },
     "name_ar": "د. خالد عبد المجيد العطوي",
     "name_en": "Dr. Khaled Abdulmajeed Al-Atawi",
     "main_title_ar": "استشاري طب حديثي الولادة | رائد التعليم الطبي في الإمارات",
     "main_title_en": "Consultant Neonatologist | Pioneer of Medical Education in the UAE",
-    "intro_title_ar": "مقدمة تعريفية",
-    "intro_title_en": "Introduction",
-    "intro_ar": "من الإيمان بأن الطب لا يتطور بالمعلومات فقط، بل بالشفافية والتقييم العلمي المسؤول، انطلقت رؤية الدكتور خالد العطوي.",
-    "intro_en": "Stemming from the belief that medicine evolves not just through information, but through transparency and responsible scientific evaluation.",
-    "quote_ar": "هدفي أن نخلق بيئة علمية شفافة تُقيم الفعاليات الطبية بمعايير موضوعية، وتُحفز المنظمين والمتحدثين على التطور المستمر.",
-    "quote_en": "My goal is to create a transparent scientific environment that evaluates medical events with objective standards.",
-    "exp_title_ar": "المناصب والخبرات العملية",
-    "exp_title_en": "Positions & Practical Experience",
-    "exp_current_title_ar": "المناصب الحالية",
-    "exp_current_title_en": "Current Positions",
-    "academic_title_ar": "الأدوار الأكاديمية والتعليمية",
-    "academic_title_en": "Academic & Educational Roles",
-    "academic_summary_ar": "يؤمن الدكتور خالد أن التعليم الطبي ليس مجرد نقل معرفة، بل بناء ثقافة مهنية قائمة على الشفافية.",
-    "academic_summary_en": "Dr. Khaled believes that medical education is not just about transferring knowledge, but about building a professional culture.",
-    "profile_title_ar": "نبذة شخصية",
-    "profile_title_en": "Personal Profile",
-    "profile_item1_label_ar": "الاسم الكامل",
-    "profile_item1_label_en": "Full Name",
-    "profile_item1_val_ar": "الدكتور خالد عبد المجيد العطوي",
-    "profile_item1_val_en": "Dr. Khaled Abdulmajeed Al-Atawi",
-    "profile_item2_label_ar": "الوظيفة الحالية",
-    "profile_item2_label_en": "Current Position",
-    "profile_item2_val_ar": "استشاري طب حديثي الولادة – مستشفى لطيفة للنساء والأطفال، هيئة الصحة بدبي",
-    "profile_item2_val_en": "Consultant Neonatologist – Latifa Women and Children Hospital, DHA",
-    "profile_item3_label_ar": "اللقب الأكاديمي",
-    "profile_item3_label_en": "Academic Title",
-    "profile_item3_val_ar": "مؤسس ومدير منصة MedPulse – نبض الطب",
-    "profile_item3_val_en": "Founder & Director of MedPulse Platform",
-    "profile_item4_label_ar": "الخبرة المهنية",
-    "profile_item4_label_en": "Professional Experience",
-    "profile_item4_val_ar": "أكثر من 30 عامًا في التخصصات الدقيقة لطب الأطفال والعناية المركزة لحديثي الولادة",
-    "profile_item4_val_en": "Over 30 years in pediatrics and neonatal intensive care"
+    "main_image": "https://picsum.photos/seed/founder-main/400/400",
+    "sections": [
+      {
+        "icon": "📖",
+        "title_ar": "مقدمة تعريفية",
+        "title_en": "Introduction",
+        "content_ar": "من الإيمان بأن الطب لا يتطور بالمعلومات فقط، بل بالشفافية والتقييم العلمي المسؤول، انطلقت رؤية الدكتور خالد العطوي.",
+        "content_en": "Stemming from the belief that medicine evolves not just through information, but through transparency and responsible scientific evaluation."
+      }
+    ],
+    "sidebar_cards": [
+      {
+        "title_ar": "المؤهلات الأكاديمية",
+        "title_en": "Academic Qualifications",
+        "content_en": "<ul><li>🎓 MBBCh – Ain Shams University – Egypt – 1989</li><li>🎓 M.Sc. in Pediatrics – Ain Shams University – 1994</li><li>🎓 PhD in Pediatrics – Ain Shams University – 2014</li><li>🎓 Fellowship of the Royal College of Paediatrics (FRCPCH) – UK – 2017</li><li>🎓 Master of Healthcare Management (MHCM) – 2009</li><li>🎓 Diploma in Hospital Management – 2019</li></ul>",
+        "content_ar": "<ul><li>🎓 بكالوريوس الطب والجراحة – جامعة عين شمس – مصر – 1989</li><li>🎓 ماجستير طب الأطفال – جامعة عين شمس – 1994</li><li>🎓 دكتوراه طب الأطفال – جامعة عين شمس – 2014</li><li>🎓 زمالة الكلية الملكية لطب الأطفال (FRCPCH) – المملكة المتحدة – 2017</li><li>🎓 ماجستير إدارة الرعاية الصحية (MHCM) – 2009</li><li>🎓 دبلوم إدارة المستشفيات – 2019</li></ul>",
+        "items": []
+      },
+      {
+        "title_ar": "الجوائز والتكريمات",
+        "title_en": "Awards & Honors",
+        "content_en": "<ul><li>🏆 Sheikh Hamdan Bin Rashid Award for Medical Sciences – 2012</li><li>🏆 Best Physician Award in Subspecialty Category – 2015</li><li>🏆 Excellence in Continuing Medical Education Award – 2019</li><li>🏆 Honored by Mohammed Bin Rashid University – 2022</li></ul>",
+        "content_ar": "<ul><li>🏆 جائزة الشيخ حمدان بن راشد للعلوم الطبية – 2012</li><li>🏆 جائزة أفضل طبيب في فئة التخصصات الدقيقة – 2015</li><li>🏆 جائزة التميز في التعليم الطبي المستمر – 2019</li><li>🏆 تكريم من جامعة محمد بن راشد للطب – 2022</li></ul>",
+        "items": []
+      }
+    ],
+    "gallery": [
+      "https://picsum.photos/seed/founder1/800/600",
+      "https://picsum.photos/seed/founder2/800/600",
+      "https://picsum.photos/seed/founder3/800/600",
+      "https://picsum.photos/seed/founder4/800/600"
+    ],
+    "contact_title_ar": "تواصل مع المؤسس",
+    "contact_title_en": "Contact the Founder",
+    "contact_content_ar": "<p>هل ترغب بالتعاون أو الاستفسار عن مبادرة MedPulse؟</p><p><strong>البريد الإلكتروني:</strong> info@medpulseuae.com</p><p><strong>الموقع الرسمي:</strong> www.medpulseuae.com</p>",
+    "contact_content_en": "<p>Would you like to collaborate or inquire about the MedPulse initiative?</p><p><strong>Email:</strong> info@medpulseuae.com</p><p><strong>Official Website:</strong> www.medpulseuae.com</p>"
   },
   "contact": {
+    "seo": {
+      "meta_title_ar": "تواصل مع ميد بلس - نبض الطب",
+      "meta_title_en": "Contact MedPulse - Nabd Al-Tibb",
+      "meta_description_ar": "تواصل معنا لطلب تقييم مؤتمرك الطبي أو للاستفسارات الإعلامية والبحثية.",
+      "meta_description_en": "Contact us to request an evaluation of your medical conference or for media and research inquiries.",
+      "keywords_ar": "اتصل بنا، تواصل مع ميد بلس، تقييم مؤتمر، استفسار طبي",
+      "keywords_en": "contact us, reach medpulse, conference evaluation, medical inquiry"
+    },
     "h1_ar": "تواصل معنا – لأن نبض المعرفة لا يتوقف",
     "h1_en": "Contact Us – Because the Pulse of Knowledge Never Stops",
-    "intro_ar": "في MedPulse – نبض الطب، نؤمن أن التواصل هو جوهر التطوير العلمي والإعلامي.",
-    "intro_en": "At MedPulse, we believe that communication is the essence of scientific and media development.",
+    "intro_ar": "<p>في MedPulse – نبض الطب, نؤمن أن التواصل هو جوهر التطوير العلمي والإعلامي.</p>",
+    "intro_en": "<p>At MedPulse, we believe that communication is the essence of scientific and media development.</p>",
     "why_title_ar": "لماذا تتواصل معنا؟",
     "why_title_en": "Why Contact Us?",
-    "why_p1_title_ar": "للجهات المنظمة",
-    "why_p1_title_en": "For Organizers",
-    "why_p1_i1_ar": "لطلب تقارير تحليلية أو تقييم رسمي لمؤتمرك الطبي.",
-    "why_p1_i1_en": "To request analytical reports or official evaluation.",
-    "why_p1_i2_ar": "للحصول على خطة تطوير وتوصيات علمية مستقبلية.",
-    "why_p1_i2_en": "To obtain a development plan and recommendations.",
-    "why_p2_title_ar": "للشركات الطبية والرعاة",
-    "why_p2_title_en": "For Companies & Sponsors",
-    "why_p2_i1_ar": "لتسليط الضوء على مشاركتكم العلمية ضمن تغطياتنا.",
-    "why_p2_i1_en": "To highlight your participation in our coverage.",
-    "why_p2_i2_ar": "لإعداد محتوى رقمي احترافي يعرض منتجاتكم.",
-    "why_p2_i2_en": "To create professional content for your products.",
-    "why_p3_title_ar": "للأطباء والباحثين",
-    "why_p3_title_en": "For Doctors & Researchers",
-    "why_p3_i1_ar": "للمشاركة بمقال علمي أو رأي تحليلي على المنصة.",
-    "why_p3_i1_en": "To contribute an article or analytical opinion.",
-    "why_p3_i2_ar": "للانضمام إلى برامجنا كمستشار علمي أو متحدث.",
-    "why_p3_i2_en": "To join our programs as a speaker or advisor.",
-    "why_p4_title_ar": "للإعلاميين والطلاب",
-    "why_p4_title_en": "For Media & Students",
-    "why_p4_i1_ar": "للتدريب ضمن فريق التغطية الإعلامية والطبية.",
-    "why_p4_i1_en": "For training with our media and medical team.",
-    "why_p4_i2_ar": "للمساهمة في نقل الأحداث من منظور احترافي.",
-    "why_p4_i2_en": "To contribute events coverage from a pro perspective.",
+    "why_cards": [
+      {
+        "title_ar": "للجهات المنظمة",
+        "title_en": "For Organizers",
+        "points": [
+          { "text_ar": "لطلب تقارير تحليلية أو تقييم رسمي لمؤتمرك الطبي.", "text_en": "To request analytical reports or official evaluation." },
+          { "text_ar": "للحصول على خطة تطوير وتوصيات علمية مستقبلية.", "text_en": "To obtain a development plan and recommendations." }
+        ]
+      },
+      {
+        "title_ar": "للشركات الطبية والرعاة",
+        "title_en": "For Companies & Sponsors",
+        "points": [
+          { "text_ar": "لتسليط الضوء على مشاركتكم العلمية ضمن تغطياتنا.", "text_en": "To highlight your participation in our coverage." },
+          { "text_ar": "لإعداد محتوى رقمي احترافي يعرض منتجاتكم.", "text_en": "To create professional content for your products." }
+        ]
+      }
+    ],
     "form_title_ar": "نموذج التواصل المباشر",
     "form_title_en": "Direct Contact Form",
     "form_intro_ar": "يمكنك ملء النموذج التالي وسيتواصل معك أحد أعضاء فريقنا خلال 24 ساعة عمل:",
@@ -138,5 +308,35 @@
     "phone_label_ar": "هاتف الاستقبال العام",
     "phone_label_en": "General Reception Phone",
     "phone_val": "+971 50 000 0000"
+  },
+  "conferences": {
+    "seo": {
+      "meta_title_ar": "المؤتمرات الطبية في الإمارات - تقييمات ميد بلس",
+      "meta_title_en": "Medical Conferences in UAE - MedPulse Evaluations",
+      "meta_description_ar": "قاعدة بيانات شاملة للمؤتمرات الطبية في الإمارات مع تقييمات علمية دقيقة لكل حدث.",
+      "meta_description_en": "A comprehensive database of medical conferences in the UAE with accurate scientific evaluations for each event.",
+      "keywords_ar": "مؤتمرات طبية، فعاليات الإمارات، تقييم المؤتمرات، طب الأطفال، طب القلب",
+      "keywords_en": "medical conferences, UAE events, conference evaluation, pediatrics, cardiology"
+    }
+  },
+  "articles": {
+    "seo": {
+      "meta_title_ar": "المقالات والتحليلات الطبية - ميد بلس",
+      "meta_title_en": "Medical Articles & Analysis - MedPulse",
+      "meta_description_ar": "مقالات معمقة وتقارير تحليلية حول أحدث المستجدات في القطاع الطبي والتعليم الطبي المستمر.",
+      "meta_description_en": "In-depth articles and analytical reports on the latest developments in the medical sector and CME.",
+      "keywords_ar": "مقالات طبية، أبحاث، تحليل، تكنولوجيا طبية، أخبار الطب",
+      "keywords_en": "medical articles, research, analysis, medtech, medical news"
+    }
+  },
+  "experts": {
+    "seo": {
+      "meta_title_ar": "فريق خبراء ميد بلس - متخصصون في التقييم",
+      "meta_title_en": "MedPulse Experts Team - Evaluation Specialists",
+      "meta_description_ar": "تعرف على الأطباء والاستشاريين والمحترفين الذين يقفون خلف تقييمات MedPulse العلمية.",
+      "meta_description_en": "Meet the doctors, consultants, and professionals behind MedPulse's scientific evaluations.",
+      "keywords_ar": "خبراء ميد بلس، أطباء، استشاريون، فريق التقييم العلمي",
+      "keywords_en": "medpulse experts, doctors, consultants, scientific evaluation team"
+    }
   }
 }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Chat } from "@google/genai";
 import { useLocalization } from '../hooks/useLocalization';
@@ -52,11 +53,18 @@ const AIChatWidget: React.FC = () => {
     
     useEffect(() => {
         if (isOpen && !chat) {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             const newChat = ai.chats.create({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-3-flash-preview',
                 config: {
-                    systemInstruction: `You are a friendly and helpful customer service assistant for MedPulse, a platform for evaluating medical conferences. Your name is 'Nabd', which means 'Pulse' in Arabic. Answer user questions about the website, conferences, articles, the founder, and our services. Be concise and helpful. Respond in the same language as the user's query.`,
+                    systemInstruction: `You are 'Nabd' (meaning 'Pulse' in Arabic), a friendly and professional medical media evaluation assistant for MedPulse.
+                    MedPulse is a platform specialized in evaluating medical conferences in the UAE and Middle East.
+                    Our mission is to provide unbiased, scientific reviews of scientific content, organization, speakers, and social impact of medical events.
+                    The founder is Dr. Khaled Al-Atawi, a Consultant Neonatologist.
+                    Answer questions about our evaluations, team of experts, articles, and services.
+                    Always be helpful, concise, and professional. 
+                    If a user asks about medical advice, politely remind them that we evaluate media/conferences and they should consult a doctor for clinical advice.
+                    Respond in the same language as the user (Arabic or English).`,
                 },
             });
             setChat(newChat);
@@ -79,11 +87,13 @@ const AIChatWidget: React.FC = () => {
 
         try {
             const response = await chat.sendMessage({ message: userMessage.text });
-            const modelMessage: Message = { role: 'model', text: response.text };
-            setMessages(prev => [...prev, modelMessage]);
+            if (response.text) {
+                const modelMessage: Message = { role: 'model', text: response.text };
+                setMessages(prev => [...prev, modelMessage]);
+            }
         } catch (error) {
             console.error("Error sending message:", error);
-            const errorMessage: Message = { role: 'model', text: 'Sorry, I encountered an error. Please try again.' };
+            const errorMessage: Message = { role: 'model', text: language === 'ar' ? 'عذراً، حدث خطأ ما. يرجى المحاولة لاحقاً.' : 'Sorry, I encountered an error. Please try again later.' };
             setMessages(prev => [...prev, errorMessage]);
         } finally {
             setIsLoading(false);

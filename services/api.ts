@@ -1,4 +1,6 @@
-const BASE_URL = 'https://medpulse-production.up.railway.app/api';
+
+export const DOMAIN = 'https://medpulse-production.up.railway.app';
+const BASE_URL = `${DOMAIN}/api`;
 
 const getHeaders = (isJson = true) => {
   const token = localStorage.getItem('auth_token');
@@ -53,42 +55,24 @@ const formDataFetch = async (url: string, method = 'POST', data: FormData) => {
 };
 
 export const api = {
-  // GitHub CMS Integration
-  getSiteConfig: async (owner?: string, repo?: string) => {
-    // Attempt to fetch live from GitHub if configured, else fallback to local
-    if (owner && repo) {
-      try {
-        const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/main/siteconfig.json?v=${Date.now()}`);
-        if (res.ok) return await res.json();
-      } catch (e) { console.warn("GitHub fetch failed, falling back to local file."); }
-    }
-    const localRes = await fetch('/siteconfig.json');
-    return await localRes.json();
+  // Utility
+  resolveImageUrl: (path: any | string | undefined, fallback: string = ''): string => {
+    if (!path) return fallback;
+    
+    // Handle object format { id, url }
+    let url = typeof path === 'string' ? path : (path.url || '');
+    
+    if (!url || url.trim() === '') return fallback;
+    if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('blob:')) return url;
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    return `${DOMAIN}${cleanPath}`;
   },
 
-  updateGitConfig: async (token: string, owner: string, repo: string, data: any) => {
-    const path = 'siteconfig.json';
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-    
-    // 1. Get current SHA
-    const getRes = await fetch(apiUrl, {
-      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (!getRes.ok) throw new Error("Could not find file on GitHub to update.");
-    const fileData = await getRes.json();
-    
-    // 2. Commit Update
-    const commitRes = await fetch(apiUrl, {
-      method: 'PUT',
-      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: `Update site config: ${new Date().toISOString()}`,
-        content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
-        sha: fileData.sha
-      })
-    });
-    return handleResponse(commitRes);
-  },
+  // Static Content (Database Driven)
+  getStaticPage: (title: string) => jsonFetch(`${BASE_URL}/static?title=${encodeURIComponent(title)}`),
+  // FIXED: Update payload only contains "attributes" key as per backend spec
+  updateStaticPage: (title: string, attributes: any) => jsonFetch(`${BASE_URL}/update-static?title=${encodeURIComponent(title)}`, 'POST', { attributes }),
+  addStaticPage: (title: string, attributes: any) => jsonFetch(`${BASE_URL}/add-static`, 'POST', { title, attributes }),
 
   // Public
   getHomeContent: () => jsonFetch(`${BASE_URL}/events-articles/`), 
@@ -96,7 +80,8 @@ export const api = {
   getEvent: (id: number) => jsonFetch(`${BASE_URL}/event/${id}`), 
   getArticles: (page = 1) => jsonFetch(`${BASE_URL}/articles?page=${page}`),
   getArticle: (id: number) => jsonFetch(`${BASE_URL}/article/${id}`), 
-  getExperts: () => jsonFetch(`${BASE_URL}/experts/`),
+  getExperts: (page = 1) => jsonFetch(`${BASE_URL}/experts?page=${page}`),
+  getExpert: (id: number) => jsonFetch(`${BASE_URL}/expert/${id}`),
   getAuthors: () => jsonFetch(`${BASE_URL}/authors/`),
   
   // Categories 
@@ -127,32 +112,42 @@ export const api = {
   getHomeSettings: () => jsonFetch(`${BASE_URL}/home-settings`),
   updateHomeSettings: (events_number: number, posts_number: number) => jsonFetch(`${BASE_URL}/home-settings`, 'POST', { events_number, posts_number }),
 
-  // Static Pages Content (Backend fallback - not used with Git logic)
-  getStaticPageContent: (pageName: string) => jsonFetch(`${BASE_URL}/static-content/${pageName}`),
-  updateStaticPageContent: (pageName: string, data: any) => jsonFetch(`${BASE_URL}/static-content`, 'POST', { page: pageName, ...data }),
-
   // Auth
   login: (email: string, password: string) => jsonFetch(`${BASE_URL}/login`, 'POST', { email, password }),
+  forgetPassword: (email: string) => jsonFetch(`${BASE_URL}/forget`, 'POST', { email }),
+  resetPassword: (email: string, token: string, password: string) => {
+    const fd = new FormData();
+    fd.append('email', email);
+    fd.append('token', token);
+    fd.append('password', password);
+    return formDataFetch(`${BASE_URL}/reset`, 'POST', fd);
+  },
 
   // Contact
   submitContactForm: (data: any) => jsonFetch(`${BASE_URL}/contact-form`, 'POST', data),
   getContactForms: (page = 1) => jsonFetch(`${BASE_URL}/contact-form?page=${page}`),
+  getContactForm: (id: number) => jsonFetch(`${BASE_URL}/contact-form/${id}`),
+  replyToContactForm: (id: number, message: string) => jsonFetch(`${BASE_URL}/contact-form/reply/${id}`, 'POST', { message }),
 
   // Media 
   createVideo: (data: any) => jsonFetch(`${BASE_URL}/video`, 'POST', data),
-  uploadImage: (file: File, type: string, relatedId: number, relatedIdField = 'id') => {
+  uploadImage: (file: File, type: string, relatedId?: number, relatedIdField?: string) => {
     const fd = new FormData();
     fd.append('images[0][file]', file);
     fd.append('images[0][type]', type);
-    fd.append(`images[0][${relatedIdField}]`, relatedId.toString());
+    if (relatedId !== undefined && relatedIdField) {
+        fd.append(`images[0][${relatedIdField}]`, relatedId.toString());
+    }
     return formDataFetch(`${BASE_URL}/image`, 'POST', fd); 
   },
-  uploadImages: (files: File[], type: string, relatedId: number, relatedIdField = 'id') => {
+  uploadImages: (files: File[], type: string, relatedId?: number, relatedIdField?: string) => {
     const fd = new FormData();
     files.forEach((file, index) => {
         fd.append(`images[${index}][file]`, file);
         fd.append(`images[${index}][type]`, type);
-        fd.append(`images[${index}][${relatedIdField}]`, relatedId.toString());
+        if (relatedId !== undefined && relatedIdField) {
+            fd.append(`images[${index}][${relatedIdField}]`, relatedId.toString());
+        }
     });
     return formDataFetch(`${BASE_URL}/image`, 'POST', fd); 
   },

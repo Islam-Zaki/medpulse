@@ -1,3 +1,4 @@
+
 // FIX: import React to use React.ReactNode
 import React from 'react';
 
@@ -8,74 +9,268 @@ export interface LocalizedString {
   en: string;
 }
 
+export interface SEOConfig {
+  meta_title_ar: string;
+  meta_title_en: string;
+  meta_description_ar: string;
+  meta_description_en: string;
+  keywords_ar: string;
+  keywords_en: string;
+}
+
+export interface ConfigGoal {
+  icon: string;
+  title_ar: string;
+  title_en: string;
+  desc_ar: string;
+  desc_en: string;
+}
+
+export interface ConfigValue {
+  icon: string;
+  title_ar: string;
+  title_en: string;
+  desc_ar: string;
+  desc_en: string;
+}
+
+export interface ConfigService {
+  icon: string;
+  title_ar: string;
+  title_en: string;
+  desc_ar: string;
+  desc_en: string;
+}
+
+export interface ConfigTeamMember {
+  icon: string;
+  title_ar: string;
+  title_en: string;
+  desc_ar: string;
+  desc_en: string;
+}
+
+export interface ConfigDifferentiator {
+  icon: string;
+  title_ar: string;
+  title_en: string;
+  desc_ar: string;
+  desc_en: string;
+}
+
+export interface ConfigVisionPoint {
+  icon: string;
+  title_ar: string;
+  title_en: string;
+  desc_ar: string;
+  desc_en: string;
+}
+
+// New Home Specific Config Types
+export interface ConfigHomePoint {
+  icon: string;
+  text_ar: string;
+  text_en: string;
+}
+
+export interface ConfigHomeWhyCard {
+  icon: string;
+  title_ar: string;
+  title_en: string;
+  desc_ar: string;
+  desc_en: string;
+}
+
+export interface ConfigHomeStep {
+  title_ar: string;
+  title_en: string;
+  desc_ar: string;
+  desc_en: string;
+}
+
+// Contact Page Specific Config Types
+export interface ConfigContactPoint {
+  text_ar: string;
+  text_en: string;
+}
+
+export interface ConfigContactCard {
+  title_ar: string;
+  title_en: string;
+  points: ConfigContactPoint[];
+}
+
+// Flexible Founder Section Types
+export interface ConfigFounderSection {
+  icon: string;
+  title_ar: string;
+  title_en: string;
+  content_ar: string;
+  content_en: string;
+}
+
+export interface ConfigFounderSidebarItem {
+  label_ar: string;
+  label_en: string;
+  value_ar: string;
+  value_en: string;
+}
+
+export interface ConfigFounderSidebarCard {
+  title_ar: string;
+  title_en: string;
+  content_ar: string; 
+  content_en: string;
+  items: ConfigFounderSidebarItem[];
+}
+
 export interface SiteConfig {
   fonts: {
     ar: { headings: string; body: string };
     en: { headings: string; body: string };
   };
   home: {
-    hero_title_ar: string; hero_title_en: string;
-    hero_subtitle_ar: string; hero_subtitle_en: string;
-    hero_desc_ar: string; hero_desc_en: string;
-    about_title_ar: string; about_title_en: string;
-    about_desc_ar: string; about_desc_en: string;
-    about_p1_ar: string; about_p1_en: string;
-    about_p2_ar: string; about_p2_en: string;
-    about_p3_ar: string; about_p3_en: string;
-    about_p4_ar: string; about_p4_en: string;
-    founder_sec_title_ar: string; founder_sec_title_en: string;
-    founder_sec_desc_ar: string; founder_sec_desc_en: string;
+    seo?: SEOConfig;
+    hero_title_ar: string; 
+    hero_title_en: string;
+    hero_subtitle_ar: string; 
+    hero_subtitle_en: string;
+    hero_desc_ar: string; 
+    hero_desc_en: string;
+    hero_btn1_ar: string; 
+    hero_btn1_en: string;
+    hero_btn2_ar: string; 
+    hero_btn2_en: string;
+    
+    about_title_ar: string; 
+    about_title_en: string;
+    about_desc_ar: string; 
+    about_desc_en: string;
+    about_items: ConfigHomePoint[];
+    
+    mv_title_ar: string; 
+    mv_title_en: string;
+    mission_icon: string;
+    mission_title_ar: string; 
+    mission_title_en: string;
+    mission_text_ar: string; 
+    mission_text_en: string;
+    mission_summary_ar?: string;
+    mission_summary_en?: string;
+    
+    vision_icon: string;
+    vision_title_ar: string; 
+    vision_title_en: string;
+    vision_text_ar: string; 
+    vision_text_en: string;
+    vision_summary_ar?: string;
+    vision_summary_en?: string;
+
+    why_title_ar: string; 
+    why_title_en: string;
+    why_desc_ar: string; 
+    why_desc_en: string;
+    why_items: ConfigHomeWhyCard[];
+
+    how_title_ar: string; 
+    how_title_en: string;
+    how_desc_ar: string; 
+    how_desc_en: string;
+    how_steps: ConfigHomeStep[];
+    how_goal_ar: string; 
+    how_goal_en: string;
+
+    latest_conf_title_ar: string; 
+    latest_conf_title_en: string;
+    latest_art_title_ar: string; 
+    latest_art_title_en: string;
+
+    founder_sec_title_ar: string; 
+    founder_sec_title_en: string;
+    founder_sec_desc_ar: string; 
+    founder_sec_desc_en: string;
+
+    cta_title_ar: string; 
+    cta_title_en: string;
+    cta_desc_ar: string; 
+    cta_desc_en: string;
+    cta_btn_ar: string; 
+    cta_btn_en: string;
+
+    social_links?: {
+      facebook?: string;
+      instagram?: string;
+      x?: string;
+      tiktok?: string;
+      youtube?: string;
+    };
   };
   about: {
+    seo?: SEOConfig;
     h1_ar: string; h1_en: string;
     subtitle_ar: string; subtitle_en: string;
+    intro_icon: string;
     intro_title_ar: string; intro_title_en: string;
     intro_p1_ar: string; intro_p1_en: string;
     intro_p2_ar: string; intro_p2_en: string;
+    
+    mission_icon: string;
     mission_title_ar: string; mission_title_en: string;
+    mission_text_ar: string; mission_text_en: string;
     mission_summary_ar: string; mission_summary_en: string;
+    
+    vision_icon: string;
     vision_title_ar: string; vision_title_en: string;
     vision_text_ar: string; vision_text_en: string;
+    vision_summary_ar: string; vision_summary_en: string;
+    
+    goals_icon: string;
+    goals: ConfigGoal[];
+    
+    values_icon: string;
+    core_values_intro_ar: string;
+    core_values_intro_en: string;
+    values: ConfigValue[];
+    
+    services_icon: string;
+    services: ConfigService[];
+    
+    team_icon: string;
+    team: ConfigTeamMember[];
+    
+    diff_icon: string;
+    differentiators: ConfigDifferentiator[];
+    
+    future_vision_icon: string;
+    future_vision_title_ar: string;
+    future_vision_title_en: string;
+    future_vision_intro_ar: string;
+    future_vision_intro_en: string;
+    future_vision: ConfigVisionPoint[];
+    future_vision_summary_ar: string;
+    future_vision_summary_en: string;
+    
     cta_title_ar: string; cta_title_en: string;
     cta_desc_ar: string; cta_desc_en: string;
     cta_btn_ar: string; cta_btn_en: string;
   };
   founder: {
+    seo?: SEOConfig;
     name_ar: string; name_en: string;
     main_title_ar: string; main_title_en: string;
-    intro_title_ar: string; intro_title_en: string;
-    intro_ar: string; intro_en: string;
-    quote_ar: string; quote_en: string;
-    exp_title_ar: string; exp_title_en: string;
-    exp_current_title_ar: string; exp_current_title_en: string;
-    academic_title_ar: string; academic_title_en: string;
-    academic_summary_ar: string; academic_summary_en: string;
-    profile_title_ar: string; profile_title_en: string;
-    profile_item1_label_ar: string; profile_item1_label_en: string;
-    profile_item1_val_ar: string; profile_item1_val_en: string;
-    profile_item2_label_ar: string; profile_item2_label_en: string;
-    profile_item2_val_ar: string; profile_item2_val_en: string;
-    profile_item3_label_ar: string; profile_item3_label_en: string;
-    profile_item3_val_ar: string; profile_item3_val_en: string;
-    profile_item4_label_ar: string; profile_item4_label_en: string;
-    profile_item4_val_ar: string; profile_item4_val_en: string;
+    main_image: any;
+    sections: ConfigFounderSection[];
+    sidebar_cards: ConfigFounderSidebarCard[];
+    gallery: any[];
+    contact_title_ar: string; contact_title_en: string;
+    contact_content_ar: string; contact_content_en: string;
   };
   contact: {
+    seo?: SEOConfig;
     h1_ar: string; h1_en: string;
     intro_ar: string; intro_en: string;
     why_title_ar: string; why_title_en: string;
-    why_p1_title_ar: string; why_p1_title_en: string;
-    why_p1_i1_ar: string; why_p1_i1_en: string;
-    why_p1_i2_ar: string; why_p1_i2_en: string;
-    why_p2_title_ar: string; why_p2_title_en: string;
-    why_p2_i1_ar: string; why_p2_i1_en: string;
-    why_p2_i2_ar: string; why_p2_i2_en: string;
-    why_p3_title_ar: string; why_p3_title_en: string;
-    why_p3_i1_ar: string; why_p3_i1_en: string;
-    why_p3_i2_ar: string; why_p3_i2_en: string;
-    why_p4_title_ar: string; why_p4_title_en: string;
-    why_p4_i1_ar: string; why_p4_i1_en: string;
-    why_p4_i2_ar: string; why_p4_i2_en: string;
+    why_cards: ConfigContactCard[];
     form_title_ar: string; form_title_en: string;
     form_intro_ar: string; form_intro_en: string;
     email_label_ar: string; email_label_en: string;
@@ -83,6 +278,9 @@ export interface SiteConfig {
     phone_label_ar: string; phone_label_en: string;
     phone_val: string;
   };
+  conferences?: { seo?: SEOConfig };
+  articles?: { seo?: SEOConfig };
+  experts?: { seo?: SEOConfig };
 }
 
 export type NavigateFunction = (page: string, params?: Record<string, any>) => void;
@@ -291,6 +489,7 @@ export interface ContactFormSubmission {
   email: string;
   number: string;
   asking_type: string;
+  coordinates?: { latitude: number; longitude: number };
   details: string;
   status: 'new' | 'read' | 'accepted' | 'rejected';
   created_at: string;
@@ -339,6 +538,7 @@ export interface ApiEvent {
   title_en: string;
   title_ar: string;
   location: string;
+  location_ar?: string;
   date_of_happening: string;
   rate: number | string; // API might return string
   stars: number; // Out of 5

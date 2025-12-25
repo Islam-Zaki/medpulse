@@ -22,7 +22,7 @@ const MethodologyIcon: React.FC<{icon: string}> = ({icon}) => {
 
 const AudienceIcon: React.FC<{icon: string; className?: string}> = ({icon, className="h-10 w-10 mb-3 text-med-tech-blue"}) => {
     const icons: {[key: string]: React.ReactNode} = {
-        doctor: <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 011-1h1a2 2 0 100-4H7a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" /></svg>,
+        doctor: <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 011-1h1a2 2 0 10-4H7a1 1 0 01-1-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" /></svg>,
         organizer: <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z" /></svg>,
         company: <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
         student: <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 14l9-5-9-5-9 5 9 5z" /><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222 4 2.222V20M1 12v7a2 2 0 002 2h18a2 2 0 002-2v-7" /></svg>,
@@ -47,53 +47,68 @@ const ConferencesPage: React.FC<ConferencesPageProps> = ({ navigate }) => {
   const [selectedYear, setSelectedYear] = useState('all');
   const [minScore, setMinScore] = useState(0);
   const [loading, setLoading] = useState(true);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+
+  const fetchData = async (page: number = 1) => {
+      setLoading(true);
+      try {
+          // Fetch events for specific page
+          const res = await api.getEvents(page);
+          
+          const eventsList: ApiEvent[] = res.data?.data || res.data || res || [];
+          const meta = res.data || res;
+          
+          setLastPage(meta.last_page || 1);
+          setCurrentPage(meta.current_page || page);
+
+          if (eventsList.length >= 0) {
+              const mapped: Conference[] = eventsList.map(e => ({
+                  id: e.id,
+                  title: { ar: e.title_ar, en: e.title_en },
+                  organizer: { ar: e.organizer_ar, en: e.organizer_en },
+                  location: { ar: e.location_ar || e.location, en: e.location },
+                  city: { ar: e.location_ar || e.location, en: e.location },
+                  date: { ar: e.date_of_happening, en: e.date_of_happening },
+                  image: e.images && e.images.length > 0 ? api.resolveImageUrl(`${e.images[0].base_url}${e.images[0].name}`) : 'https://picsum.photos/seed/conf/400/300',
+                  score: Number(e.rate) * 10,
+                  stars: e.stars,
+                  description: { ar: e.description_ar, en: e.description_en },
+                  scoreText: { ar: '', en: '' },
+                  evaluation: { 
+                      scientificContent: [0, 25],
+                      organization: [0, 20],
+                      speakers: [0, 15],
+                      sponsors: [0, 20],
+                      socialImpact: [0, 20]
+                  },
+                  specialty: { 
+                    ar: (e.subjects_ar?.[0] || '').split('|||MT_SEP|||').pop() || '', 
+                    en: (e.subjects_en?.[0] || '').split('|||MT_SEP|||').pop() || '' 
+                  },
+                  year: new Date(e.date_of_happening).getFullYear()
+              }));
+              setConferenceData(mapped);
+          }
+      } catch(e) { console.error("Failed to load conferences", e); }
+      finally { setLoading(false); }
+  };
 
   useEffect(() => {
-      const fetchData = async () => {
-          setLoading(true);
-          try {
-              // Fetch full list of events
-              const res = await api.getEvents();
-              
-              // Handle pagination structure or direct array
-              const eventsList: ApiEvent[] = Array.isArray(res) 
-                  ? res 
-                  : (res.data && Array.isArray(res.data) ? res.data : (res.data?.data || []));
-
-              if (eventsList.length > 0) {
-                  const mapped: Conference[] = eventsList.map(e => ({
-                      id: e.id,
-                      title: { ar: e.title_ar, en: e.title_en },
-                      organizer: { ar: e.organizer_ar, en: e.organizer_en },
-                      location: { ar: e.location, en: e.location },
-                      city: { ar: e.location, en: e.location },
-                      date: { ar: e.date_of_happening, en: e.date_of_happening },
-                      image: e.images && e.images.length > 0 ? `${DOMAIN}${e.images[0].base_url}${e.images[0].name}` : 'https://picsum.photos/seed/conf/400/300',
-                      score: Number(e.rate) * 10, // Assuming rate is out of 10
-                      stars: e.stars,
-                      description: { ar: e.description_ar, en: e.description_en },
-                      scoreText: { ar: '', en: '' },
-                      evaluation: { 
-                          scientificContent: [0, 25],
-                          organization: [0, 20],
-                          speakers: [0, 15],
-                          sponsors: [0, 20],
-                          socialImpact: [0, 20]
-                      },
-                      specialty: { ar: e.subjects_ar?.[0] || '', en: e.subjects_en?.[0] || '' },
-                      year: new Date(e.date_of_happening).getFullYear()
-                  }));
-                  setConferenceData(mapped);
-              }
-          } catch(e) { console.error("Failed to load conferences", e); }
-          finally { setLoading(false); }
-      };
-      fetchData();
+      fetchData(1);
   }, []);
+
+  const handlePageChange = (newPage: number) => {
+      if (newPage > 0 && newPage <= lastPage) {
+          fetchData(newPage);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+  };
 
   const specialties = useMemo(() => ['all', ...new Set(conferenceData.map(c => t(c.specialty)))], [language, t, conferenceData]);
   const cities = useMemo(() => ['all', ...new Set(conferenceData.map(c => t(c.city)))], [language, t, conferenceData]);
-  // Fix: Explicitly typing the sort arguments to string to avoid "Property 'localeCompare' does not exist on type 'unknown'"
   const years = useMemo(() => ['all', ...Array.from(new Set(conferenceData.map(c => c.year.toString())))].sort((a: string, b: string) => b.localeCompare(a)), [conferenceData]);
 
   const filteredConferences = useMemo(() => {
@@ -248,16 +263,47 @@ const ConferencesPage: React.FC<ConferencesPageProps> = ({ navigate }) => {
                   <div className="flex justify-center items-center py-20">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-med-tech-blue"></div>
                   </div>
-              ) : filteredConferences.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {filteredConferences.map(conf => (
-                    <ConferenceCard key={conf.id} conference={conf} navigate={navigate} stars={conf.stars} />
-                  ))}
-                </div>
               ) : (
-                <div className="text-center py-12 bg-white rounded-lg shadow-md">
-                  <p className="text-xl text-gray-600">{t({ ar: 'لم يتم العثور على نتائج.', en: 'No results found.' })}</p>
-                </div>
+                <>
+                  {filteredConferences.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {filteredConferences.map(conf => (
+                        <ConferenceCard key={conf.id} conference={conf} navigate={navigate} stars={conf.stars} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-white rounded-lg shadow-md">
+                      <p className="text-xl text-gray-600">{t({ ar: 'لم يتم العثور على نتائج.', en: 'No results found.' })}</p>
+                    </div>
+                  )}
+
+                  {/* Public Pagination Controls */}
+                  {lastPage > 1 && (
+                    <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => handlePageChange(currentPage - 1)} 
+                                disabled={currentPage === 1}
+                                className="px-6 py-2 bg-white border-2 border-med-tech-blue text-med-tech-blue rounded-xl font-bold hover:bg-med-tech-blue hover:text-white transition-all disabled:opacity-30 disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-transparent shadow-sm"
+                            >
+                                {t({ar: 'السابق', en: 'Previous'})}
+                            </button>
+                            <button 
+                                onClick={() => handlePageChange(currentPage + 1)} 
+                                disabled={currentPage === lastPage}
+                                className="px-6 py-2 bg-white border-2 border-med-tech-blue text-med-tech-blue rounded-xl font-bold hover:bg-med-tech-blue hover:text-white transition-all disabled:opacity-30 disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-transparent shadow-sm"
+                            >
+                                {t({ar: 'التالي', en: 'Next'})}
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600 font-bold">
+                            <span>{t({ar: 'صفحة', en: 'Page'})}</span>
+                            <span className="w-10 h-10 flex items-center justify-center bg-med-tech-blue text-white rounded-full font-bold shadow-md">{currentPage}</span>
+                            <span>{t({ar: 'من', en: 'of'})} {lastPage}</span>
+                        </div>
+                    </div>
+                  )}
+                </>
               )}
             </main>
           </div>
